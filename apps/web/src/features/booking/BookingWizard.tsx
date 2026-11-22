@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import { normalizeEthiopianPhone, formatEthiopianPhone } from '@shared/phone.ts';
+import { normalizeEthiopianPhone } from '@shared/phone.ts';
 import { isAllowedName } from '@shared/schemas.ts';
 import {
   addDays, clinicDateKey, ethiopianTime, formatClinicDate, formatClinicTime, groupSlots, splitByPartOfDay, type TimeOption,
@@ -30,9 +30,10 @@ const schema = z.object({
     .superRefine((v, ctx) => {
       const r = normalizeEthiopianPhone(v);
       if (!r.ok && r.error !== 'EMPTY') {
-        ctx.addIssue({ code: 'custom', message: r.error === 'UNSUPPORTED_NETWORK' ? 'phoneNetwork' : 'phoneInvalid' });
+        ctx.addIssue({ code: 'custom', message: 'phoneInvalid' });
       }
     }),
+  email: z.string().trim().min(1, 'emailRequired').max(254, 'emailInvalid').pipe(z.email('emailInvalid')),
   notes: z.string().trim().max(500).optional(),
   website: z.string().max(0).optional(),
 });
@@ -64,7 +65,7 @@ export default function BookingWizard() {
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [slotError, setSlotError] = useState(false);
-  const [result, setResult] = useState<{ res: BookingResult; phone: string } | null>(null);
+  const [result, setResult] = useState<{ res: BookingResult; email: string } | null>(null);
   const doneRef = useRef<HTMLHeadingElement>(null);
   const timesRef = useRef<HTMLDivElement>(null);
 
@@ -123,7 +124,7 @@ export default function BookingWizard() {
   };
 
   // ---- submit ----------------------------------------------------------------
-  const form = useForm<Details>({ resolver: zodResolver(schema), defaultValues: { fullName: '', phone: '', notes: '' } });
+  const form = useForm<Details>({ resolver: zodResolver(schema), defaultValues: { fullName: '', phone: '', email: '', notes: '' } });
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -132,7 +133,7 @@ export default function BookingWizard() {
   const mutation = useMutation({
     mutationFn: createBooking,
     onSuccess: (res, vars) => {
-      setResult({ res, phone: vars.phone });
+      setResult({ res, email: vars.email });
       requestAnimationFrame(() => {
         doneRef.current?.focus();
         doneRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
@@ -153,7 +154,11 @@ export default function BookingWizard() {
         form.setError('fullName', { message: 'nameInvalid' });
         return;
       }
-      const known = ['TOO_MANY_ACTIVE_BOOKINGS', 'PATIENT_TIME_CONFLICT', 'RATE_LIMITED', 'TURNSTILE_FAILED', 'INVALID_PHONE', 'UNSUPPORTED_NETWORK', 'NETWORK'];
+      if (code === 'INVALID_EMAIL' || (code === 'VALIDATION' && JSON.stringify((e as ApiError).details ?? '').includes('email'))) {
+        form.setError('email', { message: 'emailInvalid' });
+        return;
+      }
+      const known = ['TOO_MANY_ACTIVE_BOOKINGS', 'PATIENT_TIME_CONFLICT', 'RATE_LIMITED', 'TURNSTILE_FAILED', 'INVALID_PHONE', 'NETWORK'];
       setSubmitError(t(known.includes(code) ? `booking.errors.${code}` : 'booking.errors.generic'));
     },
   });
@@ -179,6 +184,7 @@ export default function BookingWizard() {
         startsAt: slot.startsAt,
         fullName: v.fullName,
         phone: phone.e164,
+        email: v.email.toLowerCase(),
         notes: v.notes || undefined,
         turnstileToken: captcha,
         website: v.website || undefined,
@@ -206,7 +212,7 @@ export default function BookingWizard() {
           {t(confirmed ? 'booking.done.confirmedTitle' : 'booking.done.pendingTitle')}
         </h2>
         <p className="mt-3 text-lede text-ink-soft">
-          {t(confirmed ? 'booking.done.confirmedBody' : 'booking.done.pendingBody', { phone: formatEthiopianPhone(result.phone) })}
+          {t(confirmed ? 'booking.done.confirmedBody' : 'booking.done.pendingBody', { email: result.email })}
         </p>
         <dl className="mt-8 grid gap-4 rounded-card bg-page p-6 ring-1 ring-line sm:grid-cols-2">
           <Fact label={t('booking.steps.time')}>
@@ -242,6 +248,13 @@ export default function BookingWizard() {
         <input id="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="09xx xxx xxx" maxLength={20}
           className="fld tabular-nums" aria-invalid={!!err.phone} aria-describedby={err.phone ? 'phone-error' : undefined}
           {...form.register('phone')} />
+      </Fld>
+      <Fld id="email" label={t('booking.details.email')} className="sm:col-span-2"
+        error={err.email?.message && t(`booking.errors.${err.email.message}`)}>
+        <input id="email" type="email" inputMode="email" autoComplete="email" placeholder="name@example.com" maxLength={254}
+          className="fld" aria-invalid={!!err.email} aria-describedby={err.email ? 'email-error' : 'email-hint'}
+          {...form.register('email')} />
+        {!err.email && <small id="email-hint" className="text-xs text-subtle">{t('booking.details.emailHint')}</small>}
       </Fld>
 
       <Fld id="service" label={t('booking.form.treatment')}>

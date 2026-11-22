@@ -5,22 +5,21 @@
 -- ⚠ PLACEHOLDERS — replace before launch:
 --   * street addresses, coordinates and map links of both clinics
 --   * all four dentist profiles (names, bios, photos, services, hours)
---   * alert_phone of each location (receives "new booking" SMS)
 
 ------------------------------------------------------------------------------
 -- Locations
 ------------------------------------------------------------------------------
 insert into public.locations
-  (slug, name, city, address, phone, whatsapp, alert_phone, map_url, latitude, longitude, opening_hours_note, sort_order)
+  (slug, name, city, address, phone, whatsapp, map_url, latitude, longitude, opening_hours_note, sort_order)
 values
   ('addis-ababa', 'Roha Speciality Dental Center — Addis Ababa', 'Addis Ababa',
    'Bole Road, Addis Ababa, Ethiopia (placeholder address)',
-   '+251 94 604 0506', '251946040506', '+251946040506',
+   '+251 94 604 0506', '251946040506',
    'https://www.google.com/maps/search/?api=1&query=Roha+Speciality+Dental+Center+Addis+Ababa',
    9.010800, 38.761300, 'Mon–Sat 8:30–17:30 · Sun closed', 1),
   ('gonder', 'Roha Speciality Dental Center — Gonder', 'Gonder',
    'Piazza, Gonder, Ethiopia (placeholder address)',
-   '+251 92 364 5456', '251923645456', '+251923645456',
+   '+251 92 364 5456', '251923645456',
    'https://www.google.com/maps/search/?api=1&query=Roha+Speciality+Dental+Center+Gonder',
    12.603000, 37.452100, 'Mon–Sat 8:30–17:30 · Sun closed', 2)
 on conflict (slug) do update set

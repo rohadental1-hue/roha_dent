@@ -23,8 +23,8 @@ insert into b select 'drop', bk.appointment_id from ctx, public.book_appointment
   (select id from public.locations where slug = 'addis-ababa'), (select id from public.services where slug = 'scaling'),
   (select id from public.dentists where slug = 'dr-selam-bekele'), (ctx.monday + time '10:00') at time zone 'Africa/Addis_Ababa',
   'Drop Me', '+251911000082') bk;
-delete from public.sms_log;
-insert into public.sms_log (id, type, to_phone, body, status) values
+delete from public.email_log;
+insert into public.email_log (id, type, to_email, body, status) values
   ('00000000-0000-0000-0000-00000000d001', 'booking_received', '+251911000081', 'a', 'delivered'),
   ('00000000-0000-0000-0000-00000000d002', 'booking_received', '+251911000082', 'b', 'delivered'),
   ('00000000-0000-0000-0000-00000000d003', 'booking_received', '+251911000082', 'c', 'queued');
@@ -33,17 +33,17 @@ grant select on pids to authenticated;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}', true);
-select throws_ok($$select public.admin_delete_history('sms', array['00000000-0000-0000-0000-00000000d001'])$$, '42501', null,
+select throws_ok($$select public.admin_delete_history('emails', array['00000000-0000-0000-0000-00000000d001'])$$, '42501', null,
                  'staff cannot delete selected history');
 
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}', true);
-select is((public.admin_delete_history('sms', array['00000000-0000-0000-0000-00000000d001', '00000000-0000-0000-0000-00000000d003']) ->> 'deleted')::int,
+select is((public.admin_delete_history('emails', array['00000000-0000-0000-0000-00000000d001', '00000000-0000-0000-0000-00000000d003']) ->> 'deleted')::int,
           1, 'only the selected, already-sent text is deleted');
-select is(public.admin_delete_history('sms', array[]::text[]), '{"deleted": 0, "appointments_deleted": 0}'::jsonb, 'nothing selected → nothing deleted');
+select is(public.admin_delete_history('emails', array[]::text[]), '{"deleted": 0, "appointments_deleted": 0}'::jsonb, 'nothing selected → nothing deleted');
 select is(public.admin_delete_history('patients', (select array_agg(id) from pids)), '{"deleted": 1, "appointments_deleted": 1}'::jsonb,
           'deleting a selected patient takes their appointments');
 reset role;
-select is((select array_agg(id::text order by id) from public.sms_log),
+select is((select array_agg(id::text order by id) from public.email_log),
           array['00000000-0000-0000-0000-00000000d002', '00000000-0000-0000-0000-00000000d003'], 'unselected and queued texts remain');
 select is((select array_agg(full_name) from public.patients), array['Keep Me'], 'the other patient remains');
 select is((select count(*)::int from public.appointments), 1, 'their appointment remains');

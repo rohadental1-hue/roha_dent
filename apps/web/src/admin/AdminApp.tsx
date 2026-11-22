@@ -13,7 +13,7 @@ import { AppointmentDrawer } from './pages/AppointmentDrawer';
 const NewAppointmentPage = lazy(() => import('./pages/NewAppointment'));
 const PatientsPage = lazy(() => import('./pages/Patients'));
 const PatientDetailPage = lazy(() => import('./pages/PatientDetail'));
-const SmsLogPage = lazy(() => import('./pages/SmsLog'));
+const EmailLogPage = lazy(() => import('./pages/EmailLog'));
 const SchedulePage = lazy(() => import('./pages/Schedule'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const ClinicPage = lazy(() => import('./pages/Clinic'));
@@ -76,13 +76,13 @@ type NavItem = { to: string; label: string; icon: IconName; end?: boolean };
 const DAILY: NavItem[] = [
   { to: '/admin', label: 'Appointments', icon: 'calendar', end: true },
   { to: '/admin/patients', label: 'Patients', icon: 'users' },
-  { to: '/admin/sms', label: 'Text messages', icon: 'message' },
+  { to: '/admin/emails', label: 'Emails', icon: 'message' },
   { to: '/admin/schedule', label: 'Working hours & days off', icon: 'clock' },
 ];
 const OWNER: NavItem[] = [
   { to: '/admin/clinic', label: 'Dentists & services', icon: 'building' },
   { to: '/admin/staff', label: 'Staff accounts', icon: 'user' },
-  { to: '/admin/settings', label: 'Settings & SMS texts', icon: 'settings' },
+  { to: '/admin/settings', label: 'Settings & email texts', icon: 'settings' },
   { to: '/admin/activity', label: 'Change history', icon: 'activity' },
 ];
 
@@ -99,7 +99,7 @@ function Shell() {
   useRealtimeRefresh('appointments', [['appointments'], ['appointment'], ['pending-count'], ['patient']], (row) => {
     if (row.source === 'online') toast('New booking request from the website', 'info');
   });
-  useRealtimeRefresh('sms_log', [['sms'], ['appointment-sms']]);
+  useRealtimeRefresh('email_log', [['emails'], ['appointment-emails']]);
 
   const pending = usePendingCount(auth.scope);
 
@@ -143,7 +143,7 @@ function Shell() {
             {OWNER.map(link)}
           </div>
         ) : (
-          link({ to: '/admin/settings', label: 'SMS texts & rules', icon: 'settings' })
+          link({ to: '/admin/settings', label: 'Email texts & rules', icon: 'settings' })
         )}
       </nav>
       <div className="mt-auto border-t border-white/10 pt-4">
@@ -185,7 +185,8 @@ function Shell() {
                 <Route path="new" element={<NewAppointmentPage />} />
                 <Route path="patients" element={<PatientsPage />} />
                 <Route path="patients/:id" element={<PatientDetailPage />} />
-                <Route path="sms" element={<SmsLogPage />} />
+                <Route path="emails" element={<EmailLogPage />} />
+                <Route path="sms" element={<Navigate to="/admin/emails" replace />} />
                 <Route path="schedule" element={<SchedulePage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="account" element={<AccountPage />} />

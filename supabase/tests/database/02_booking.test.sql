@@ -105,8 +105,8 @@ select set_config('request.jwt.claims', '', true);
 -- validation
 select throws_ok($$select * from public.book_appointment((select addis from ctx), (select scaling from ctx), null, pg_temp.at('14:00'), 'Bad Phone', '0911000001')$$,
                  'P0001', 'INVALID_PHONE', 'non-E.164 phone rejected');
-select throws_ok($$select * from public.book_appointment((select addis from ctx), (select scaling from ctx), null, pg_temp.at('14:00'), 'Safaricom', '+251711000001')$$,
-                 'P0001', 'INVALID_PHONE', 'Safaricom (07) numbers rejected for now');
+select throws_ok($$select * from public.book_appointment((select addis from ctx), (select scaling from ctx), null, pg_temp.at('14:00'), 'Landline', '+251111000001')$$,
+                 'P0001', 'INVALID_PHONE', 'non-mobile numbers rejected');
 select throws_ok($$select * from public.book_appointment((select addis from ctx), (select scaling from ctx), null, pg_temp.at('14:00'), 'X', '+251911000031')$$,
                  'P0001', 'INVALID_NAME', 'too-short name rejected');
 select throws_ok($$select * from public.book_appointment((select addis from ctx), (select scaling from ctx), null, pg_temp.at('14:07'), 'Off Grid', '+251911000031')$$,

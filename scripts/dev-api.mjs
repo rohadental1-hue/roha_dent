@@ -2,10 +2,10 @@
 //   • PGlite (in-memory Postgres) with all migrations + seed
 //   • a minimal PostgREST stand-in for  POST /rest/v1/rpc/<fn>   (role = anon, or service_role with the dev service key)
 //   • the REAL Edge Functions run under Deno and proxied at /functions/v1/<name>
-//   • a PATCH /rest/v1/<table>?col=eq.val stand-in (service_role only) for the SMS worker / webhook
-//   • SMS: send-sms runs in DRY_RUN unless you export SMS_DRY_RUN=false + SMSETHIOPIA_API_KEY.
+//   • a PATCH /rest/v1/<table>?col=eq.val stand-in (service_role only) for the e-mail worker
+//   • E-mail: send-email runs in DRY_RUN unless you export EMAIL_DRY_RUN=false + RESEND_API_KEY + EMAIL_FROM.
 //     pg_net / pg_cron don't exist in PGlite, so this script kicks the worker after each booking call
-//     and runs reminders + the worker tick every 30 s. Inspect the outbox at GET /dev/sms.
+//     and runs the worker tick every 30 s. Inspect the outbox at GET /dev/emails.
 // Data is reset on every start.
 import http from 'node:http';
 import { spawn } from 'node:child_process';
@@ -19,10 +19,9 @@ import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
 const PORT = 54321;
 export const DEV_ANON_KEY = 'dev-anon-key';
 export const DEV_SERVICE_KEY = 'dev-service-role-key';
-const FUNCTIONS = { 'create-booking': 54331, 'manage-booking': 54332, 'send-sms': 54333, 'sms-delivery-webhook': 54334 };
+const FUNCTIONS = { 'create-booking': 54331, 'manage-booking': 54332, 'send-email': 54333 };
 const DEV_WORKER_SECRET = 'dev-worker-secret';
-const DEV_WEBHOOK_SECRET = 'dev-webhook-secret';
-const SMS_DRY_RUN = process.env.SMS_DRY_RUN ?? 'true';
+const EMAIL_DRY_RUN = process.env.EMAIL_DRY_RUN ?? 'true';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (...p) => readFileSync(join(root, ...p), 'utf8');
@@ -34,7 +33,7 @@ for (const f of readdirSync(join(root, 'supabase/migrations')).filter((f) => f.e
   await db.exec(read('supabase/migrations', f));
 }
 await db.exec(read('supabase/seed.sql'));
-await db.exec(`update public.settings set public_site_url = 'http://localhost:5173'`); // SMS {manage_link} → local site
+await db.exec(`update public.settings set public_site_url = 'http://localhost:5173'`); // e-mail {manage_link} → local site
 console.log('✓ database ready (migrations + seed)');
 
 const fnMeta = new Map(); // name → { retset, scalar }
@@ -88,11 +87,10 @@ for (const [name, port] of Object.entries(FUNCTIONS)) {
       TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY ?? '1x0000000000000000000000000000000AA',
       ALLOWED_ORIGINS: 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173',
       PUBLIC_SITE_URL: 'http://localhost:5173',
-      SMS_DRY_RUN,
-      SMS_WORKER_SECRET: DEV_WORKER_SECRET,
-      SMS_WEBHOOK_SECRET: DEV_WEBHOOK_SECRET,
-      SMSETHIOPIA_API_KEY: process.env.SMSETHIOPIA_API_KEY ?? '',
-      SMSETHIOPIA_BASE_URL: process.env.SMSETHIOPIA_BASE_URL ?? 'https://smsethiopia.com',
+      EMAIL_DRY_RUN,
+      EMAIL_WORKER_SECRET: DEV_WORKER_SECRET,
+      RESEND_API_KEY: process.env.RESEND_API_KEY ?? '',
+      EMAIL_FROM: process.env.EMAIL_FROM ?? '',
     },
   });
   child.stdout.on('data', (d) => process.stdout.write(`[${name}] ${d}`));
@@ -127,30 +125,30 @@ async function patchTable(table, params, patch, prefer) {
   });
 }
 
-// ---- SMS worker kick (stands in for pg_net + pg_cron) ---------------------------
+// ---- e-mail worker kick (stands in for pg_net + pg_cron) ---------------------------
 let kickTimer;
 function kickWorker(delay = 300) {
   clearTimeout(kickTimer);
   kickTimer = setTimeout(async () => {
     try {
-      const r = await fetch(`http://127.0.0.1:${FUNCTIONS['send-sms']}/`, {
+      const r = await fetch(`http://127.0.0.1:${FUNCTIONS['send-email']}/`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-worker-secret': DEV_WORKER_SECRET },
         body: '{}',
       });
       const out = await r.json().catch(() => ({}));
-      if (out.sent || out.logged || out.failed || out.retrying) console.log('[sms-worker]', JSON.stringify(out));
+      if (out.sent || out.logged || out.failed || out.retrying) console.log('[email-worker]', JSON.stringify(out));
     } catch { /* worker not up yet; the interval retries */ }
   }, delay);
 }
 setInterval(async () => {
   try {
     const due = await serial(async () => {
-      return (await db.query('select public.sms_worker_tick() as due')).rows[0]?.due;
+      return (await db.query('select public.email_worker_tick() as due')).rows[0]?.due;
     });
     if (due) kickWorker(0);
   } catch (e) {
-    console.error('[sms-tick]', e.message);
+    console.error('[email-tick]', e.message);
   }
 }, 30_000);
 
@@ -191,10 +189,10 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === 'OPTIONS') return res.writeHead(204, cors).end();
 
-  if (url.pathname === '/dev/sms' && req.method === 'GET') {
+  if (url.pathname === '/dev/emails' && req.method === 'GET') {
     const rows = await serial(async () => (await db.query(
-      `select created_at, type, to_phone, status, segments, encoding, attempts, error_code, error, body
-       from public.sms_log order by created_at desc limit 50`)).rows);
+      `select created_at, type, to_email, status, attempts, error_code, error, subject, body
+       from public.email_log order by created_at desc limit 50`)).rows);
     res.writeHead(200, { ...cors, 'content-type': 'application/json; charset=utf-8' });
     return res.end(JSON.stringify(rows, null, 2));
   }
@@ -235,5 +233,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`✓ dev API on http://127.0.0.1:${PORT}`);
   console.log(`  web app env: VITE_SUPABASE_URL=http://127.0.0.1:${PORT}  VITE_SUPABASE_ANON_KEY=${DEV_ANON_KEY}`);
-  console.log(`  SMS: ${SMS_DRY_RUN === 'false' ? 'LIVE (SMS Ethiopia)' : 'dry run'} · outbox at http://127.0.0.1:${PORT}/dev/sms`);
+  console.log(`  E-mail: ${EMAIL_DRY_RUN === 'false' ? 'LIVE (Resend)' : 'dry run'} · outbox at http://127.0.0.1:${PORT}/dev/emails`);
 });

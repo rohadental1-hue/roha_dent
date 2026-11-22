@@ -1,14 +1,14 @@
 // Ethiopian mobile number normalization. Pure TS — shared by Edge Functions (Deno) and the web app.
 //
-// SMS Ethiopia only delivers to Ethio Telecom numbers (msisdn 2519XXXXXXXX), so for now only
-// 09… numbers are accepted. Safaricom (07…) numbers are recognised and rejected with a clear reason.
+// Accepts Ethio Telecom (09…) and Safaricom (07…) mobile numbers. Messages go by e-mail, so the
+// phone number is the patient's identity and the number staff call.
 
-export type PhoneError = 'EMPTY' | 'INVALID' | 'UNSUPPORTED_NETWORK';
+export type PhoneError = 'EMPTY' | 'INVALID';
 export type PhoneResult = { ok: true; e164: string } | { ok: false; error: PhoneError };
 
 /**
  * Accepts 0911234567, 911234567, 251911234567, +251911234567, 00251911234567,
- * with spaces, dashes, dots or brackets. Returns +2519XXXXXXXX.
+ * 0711234567, … with spaces, dashes, dots or brackets. Returns +2519XXXXXXXX or +2517XXXXXXXX.
  */
 export function normalizeEthiopianPhone(input: string | null | undefined): PhoneResult {
   const raw = (input ?? '').trim();
@@ -24,12 +24,8 @@ export function normalizeEthiopianPhone(input: string | null | undefined): Phone
   if (national.length === 10 && national.startsWith('0')) national = national.slice(1);
 
   if (!/^[79]\d{8}$/.test(national)) return { ok: false, error: 'INVALID' };
-  if (national.startsWith('7')) return { ok: false, error: 'UNSUPPORTED_NETWORK' };
   return { ok: true, e164: `+251${national}` };
 }
-
-/** SMS Ethiopia expects 12 digits without "+": 2519XXXXXXXX */
-export const toMsisdn = (e164: string) => e164.replace(/^\+/, '');
 
 /** +251911234567 → +251 91 123 4567 */
 export function formatEthiopianPhone(e164: string): string {

@@ -128,7 +128,7 @@ export default function ServiceDetail() {
           <Card data-reveal style={stagger(1)}>
             <CardHeader>
               <CardTitle>Book {s.shortName.toLowerCase()}</CardTitle>
-              <CardDescription>Pick a clinic and a time online. We confirm by SMS, and you pay at the clinic.</CardDescription>
+              <CardDescription>Pick a clinic and a time online. We confirm by email, and you pay at the clinic.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-5">
               <Button asChild className="w-full">

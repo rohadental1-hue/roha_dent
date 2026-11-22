@@ -22,7 +22,7 @@ export default function Book() {
     <>
       <Seo
         title="Book an Appointment"
-        description="Book a dental appointment at Roha Speciality Dental Center in Addis Ababa or Gonder. Choose a time online and get SMS confirmation. Pay at the clinic."
+        description="Book a dental appointment at Roha Speciality Dental Center in Addis Ababa or Gonder. Choose a time online and get confirmation by email. Pay at the clinic."
         path="/book"
         jsonLd={[breadcrumbLd(crumbs)]}
       />

@@ -6,7 +6,7 @@ import type { AuditRow } from '../types';
 import { Empty, ErrorBox, Loading, PageHeader, btn, fmtDateTime, inputInline, useOpenAppointment } from '../ui';
 import { CLEARED_LABEL, ClearHistoryButton, RowCheck, SelectionBar, useSelection } from './ClearHistory';
 
-const ENTITIES = ['appointments', 'profiles', 'settings', 'sms_templates'];
+const ENTITIES = ['appointments', 'profiles', 'settings', 'email_templates'];
 const HIDE = new Set(['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'patient_id', 'location_id']);
 
 export default function ActivityPage() {
@@ -57,7 +57,7 @@ export default function ActivityPage() {
 
   return (
     <>
-      <PageHeader title="Activity" subtitle="Who changed what — bookings, staff accounts, settings and SMS templates."
+      <PageHeader title="Activity" subtitle="Who changed what — bookings, staff accounts, settings and email templates."
         actions={
           <>
             <select className={`${inputInline} w-auto`} value={entity} onChange={(e) => setEntity(e.target.value)} aria-label="Filter">

@@ -60,6 +60,7 @@ export async function readJson(req: Request): Promise<unknown | undefined> {
 /** Business errors raised by our SQL functions (SQLSTATE P0001, message = code). */
 const DB_ERRORS: Partial<Record<string, { status: number; code: ApiErrorCode }>> = {
   INVALID_PHONE: { status: 400, code: 'INVALID_PHONE' },
+  INVALID_EMAIL: { status: 400, code: 'INVALID_EMAIL' },
   INVALID_NAME: { status: 400, code: 'INVALID_NAME' },
   INVALID_NOTES: { status: 400, code: 'INVALID_NOTES' },
   SLOT_UNAVAILABLE: { status: 409, code: 'SLOT_UNAVAILABLE' },

@@ -121,7 +121,7 @@ export default function StaffPage() {
       <Modal open={!!secret} onClose={() => setSecret(null)} title="Temporary password">
         {secret && (
           <div className="space-y-4 text-sm">
-            <p>Give these sign-in details to the person directly (not by SMS). They must choose their own password when they first sign in.</p>
+            <p>Give these sign-in details to the person directly (not by email or text). They must choose their own password when they first sign in.</p>
             <dl className="grid grid-cols-[6rem_1fr] gap-y-2 rounded-lg bg-enamel p-3">
               <dt className="text-ink-soft">Address</dt><dd className="font-mono">{window.location.origin}/admin</dd>
               <dt className="text-ink-soft">Email</dt><dd className="font-mono">{secret.email}</dd>

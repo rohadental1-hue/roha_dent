@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatEthiopianPhone, normalizeEthiopianPhone, toMsisdn } from '@shared/phone.ts';
+import { formatEthiopianPhone, normalizeEthiopianPhone } from '@shared/phone.ts';
 
 describe('normalizeEthiopianPhone', () => {
   it.each([
@@ -17,8 +17,8 @@ describe('normalizeEthiopianPhone', () => {
     expect(normalizeEthiopianPhone(input)).toEqual({ ok: true, e164: expected });
   });
 
-  it.each(['0711234567', '+251711234567', '711234567'])('rejects Safaricom %s as UNSUPPORTED_NETWORK', (input) => {
-    expect(normalizeEthiopianPhone(input)).toEqual({ ok: false, error: 'UNSUPPORTED_NETWORK' });
+  it.each(['0711234567', '+251711234567', '711234567'])('accepts Safaricom %s', (input) => {
+    expect(normalizeEthiopianPhone(input)).toEqual({ ok: true, e164: '+251711234567' });
   });
 
   it.each(['', '   ', null, undefined])('rejects empty %p', (input) => {
@@ -40,9 +40,6 @@ describe('normalizeEthiopianPhone', () => {
 });
 
 describe('format helpers', () => {
-  it('toMsisdn strips the plus for SMS Ethiopia', () => {
-    expect(toMsisdn('+251911234567')).toBe('251911234567');
-  });
   it('formats for display', () => {
     expect(formatEthiopianPhone('+251946040506')).toBe('+251 94 604 0506');
     expect(formatEthiopianPhone('garbage')).toBe('garbage');

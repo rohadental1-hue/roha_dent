@@ -2,8 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useSearchParams } from 'react-router';
 import { Icon, type IconName } from '../components/Icon';
 import { formatEthiopianPhone } from '@shared/phone.ts';
-import type { AppointmentStatus, SmsStatus } from './types';
-import { STATUS_LABEL, smsState } from './types';
+import type { AppointmentStatus, EmailStatus } from './types';
+import { STATUS_LABEL, emailState } from './types';
 
 // Controls are sized for touch and for people who are not computer experts:
 // big targets, clear labels, one obvious main action.
@@ -166,9 +166,9 @@ export function StatusBadge({ status }: { status: AppointmentStatus }) {
   );
 }
 
-export const SMS_PROBLEM: SmsStatus[] = ['failed', 'rejected', 'undelivered', 'expired'];
-export function SmsBadge({ status }: { status: SmsStatus }) {
-  const s = smsState(status);
+export const EMAIL_PROBLEM: EmailStatus[] = ['failed', 'rejected', 'undelivered', 'expired', 'bounced', 'complained'];
+export function EmailBadge({ status }: { status: EmailStatus }) {
+  const s = emailState(status);
   const cls = {
     ok: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
     wait: 'bg-roha-50 text-roha-700 ring-roha-200',
@@ -179,6 +179,20 @@ export function SmsBadge({ status }: { status: SmsStatus }) {
     <span title={s.help} className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-sm font-semibold ring-1 ring-inset ${cls}`}>
       {s.label}
     </span>
+  );
+}
+
+/** What the patient sees: subject line, Roha header, the text with clickable links. */
+export function EmailPreview({ subject, body }: { subject: string; body: string }) {
+  const parts = body.split(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/g);
+  return (
+    <div className="overflow-hidden rounded-lg border border-line bg-white">
+      <p className="border-b border-line bg-enamel px-3 py-2 text-sm"><span className="text-ink-soft">Subject:</span> <b>{subject || '(no subject)'}</b></p>
+      <p className="bg-roha-700 px-3 py-2 font-semibold text-white">Roha Speciality Dental Center</p>
+      <p className="whitespace-pre-wrap break-words px-3 py-3 text-sm">
+        {parts.map((p, i) => (i % 2 === 1 ? <a key={i} href={p} className="link break-all" target="_blank" rel="noreferrer">{p}</a> : p))}
+      </p>
+    </div>
   );
 }
 

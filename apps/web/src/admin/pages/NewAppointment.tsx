@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatEthiopianPhone, normalizeEthiopianPhone } from '@shared/phone.ts';
-import { renderTemplate, smsInfo } from '@shared/sms.ts';
+import { renderTemplate } from '@shared/email.ts';
 import { addDays, clinicDateKey, clinicIso, ethiopianTimeOfDay, formatClinicDate, formatEthiopianDate } from '@shared/time.ts';
 import { supabase } from '../supabase';
 import { useAuth } from '../auth';
 import { errorMessage, useLookups } from '../data';
-import type { AppointmentSource, AppointmentStatus, PatientLite, SmsTemplate } from '../types';
-import { Card, Choice, ErrorBox, Field, PageHeader, btn, inputCls, inputInline, useDebounced, useToast } from '../ui';
+import type { AppointmentSource, AppointmentStatus, EmailTemplate, Patient } from '../types';
+import { Card, Choice, EmailPreview, ErrorBox, Field, PageHeader, btn, inputCls, inputInline, useDebounced, useToast } from '../ui';
 import { SlotField } from './SlotField';
 import { useWriteLocation } from './common';
 import { dayName } from './Appointments';
@@ -29,6 +29,7 @@ export default function NewAppointmentPage() {
   const [time, setTime] = useState('');
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [source, setSource] = useState<AppointmentSource>('phone');
   const [status, setStatus] = useState<AppointmentStatus>('confirmed');
   const [notes, setNotes] = useState('');
@@ -43,31 +44,32 @@ export default function NewAppointmentPage() {
   }, [dentists, dentistId]);
   useEffect(() => setTime(''), [dentistId, date, serviceId]);
 
-  // Returning patient: look up by phone and fill in the name.
+  // Returning patient: look up by phone and fill in the name and e-mail.
   const parsedPhone = normalizeEthiopianPhone(phone);
   const debouncedPhone = useDebounced(parsedPhone.ok ? parsedPhone.e164 : '', 300);
   const existing = useQuery({
     queryKey: ['patient-by-phone', debouncedPhone],
     enabled: !!debouncedPhone,
     queryFn: async () => {
-      const { data, error } = await supabase.from('patients').select('id, full_name, phone').eq('phone', debouncedPhone).maybeSingle();
+      const { data, error } = await supabase.from('patients').select('id, full_name, phone, email').eq('phone', debouncedPhone).maybeSingle();
       if (error) throw error;
-      return data as PatientLite | null;
+      return data as Pick<Patient, 'id' | 'full_name' | 'phone' | 'email'> | null;
     },
   });
   useEffect(() => {
     if (existing.data && !name.trim()) setName(existing.data.full_name);
+    if (existing.data?.email && !email.trim()) setEmail(existing.data.email);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing.data]);
 
-  // Preview of the SMS the patient will receive.
+  // Preview of the email the patient will receive.
   const templates = useQuery({
-    queryKey: ['sms-templates'],
+    queryKey: ['email-templates'],
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.from('sms_templates').select('key, locale, body, is_active, updated_at').eq('locale', 'en');
+      const { data, error } = await supabase.from('email_templates').select('key, locale, subject, body, is_active, updated_at').eq('locale', 'en');
       if (error) throw error;
-      return data as SmsTemplate[];
+      return data as EmailTemplate[];
     },
   });
 
@@ -83,12 +85,15 @@ export default function NewAppointmentPage() {
         p_source: source,
         p_status: status,
         p_internal_notes: notes.trim() || null,
+        p_email: email.trim() || null,
       });
       if (error) throw error;
       return (data as { appointment_id: string }[])[0].appointment_id;
     },
     onSuccess: (id) => {
-      toast(`Booked! ${name.trim().split(' ')[0]} gets an SMS now.`);
+      const first = name.trim().split(' ')[0];
+      toast(status !== 'confirmed' ? 'Booked. Confirm it once the time is agreed.'
+        : email.trim() ? `Booked! ${first} gets an email now.` : `Booked! No email on file — tell ${first} the time.`);
       qc.invalidateQueries({ queryKey: ['appointments'] });
       qc.invalidateQueries({ queryKey: ['pending-count'] });
       navigate(`/admin?${date === today ? '' : `date=${date}&`}appt=${id}`);
@@ -97,12 +102,12 @@ export default function NewAppointmentPage() {
   });
 
   const phoneError = phone.trim().length >= 4 && !parsedPhone.ok
-    ? parsedPhone.error === 'UNSUPPORTED_NETWORK'
-      ? 'Safaricom (07…) numbers cannot receive our SMS yet. Ask for an Ethio Telecom 09… number.'
-      : 'This does not look like a mobile number. Example: 0911 234 567'
+    ? 'This does not look like a mobile number. Example: 0911 234 567'
     : null;
+  const emailOk = !email.trim() || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
   const missing = [
     !parsedPhone.ok && 'phone number',
+    !emailOk && 'a valid email (or leave it empty)',
     name.trim().length < 2 && 'name',
     !serviceId && 'treatment',
     !dentistId && 'dentist',
@@ -110,18 +115,20 @@ export default function NewAppointmentPage() {
   ].filter(Boolean) as string[];
   const ready = missing.length === 0 && !!locationId;
 
-  const smsText = useMemo(() => {
-    // Patients only get a text once a booking is confirmed (or cancelled) — migration 0016.
-    if (status !== 'confirmed') return null;
+  const emailText = useMemo(() => {
+    // Patients only get an email once a booking is confirmed (or cancelled) — migrations 0016/0019.
+    if (status !== 'confirmed' || !email.trim()) return null;
     const tpl = templates.data?.find((t) => t.key === 'booking_confirmed');
     if (!tpl || !tpl.is_active || !ready) return null;
     const loc = lk?.location(locationId);
-    return renderTemplate(tpl.body, {
-      patient_name: name.trim().split(' ')[0], patient_full_name: name.trim(), date: smsDate(date),
+    const vars = {
+      patient_name: name.trim().split(' ')[0], patient_full_name: name.trim(), date: serverDate(date),
       time, service: service?.name, location: loc?.city, location_phone: loc?.phone, dentist: lk?.dentist(dentistId)?.full_name,
-      manage_link: 'rohadent.com/booking/…', patient_phone: parsedPhone.ok ? parsedPhone.e164 : '', status,
-    });
-  }, [templates.data, status, ready, lk, locationId, name, date, time, service, dentistId, parsedPhone]);
+      manage_link: 'https://rohadent.com/b/…', patient_phone: parsedPhone.ok ? parsedPhone.e164 : '', status,
+      local_time: ethiopianTimeOfDay(time), local_date: formatEthiopianDate(date, 'am', false),
+    };
+    return { subject: renderTemplate(tpl.subject, vars), body: renderTemplate(tpl.body, vars) };
+  }, [templates.data, status, email, ready, lk, locationId, name, date, time, service, dentistId, parsedPhone]);
 
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -137,12 +144,17 @@ export default function NewAppointmentPage() {
           <Card title="Who is the patient?" step={1}>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Mobile number" error={phoneError}
-                hint={existing.data ? <span className="font-semibold text-emerald-800">✓ Known patient: {existing.data.full_name}</span> : 'The SMS goes to this number.'}>
+                hint={existing.data ? <span className="font-semibold text-emerald-800">✓ Known patient: {existing.data.full_name}</span> : undefined}>
                 <input className={`${inputCls} text-lg`} inputMode="tel" autoComplete="off" value={phone} onChange={(e) => setPhone(e.target.value)}
                   aria-invalid={!!phoneError} placeholder="0911 234 567" autoFocus />
               </Field>
               <Field label="Full name">
                 <input className={`${inputCls} text-lg`} autoComplete="off" maxLength={100} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Abebe Kebede" />
+              </Field>
+              <Field label="Email (optional)" className="sm:col-span-2" error={emailOk ? null : 'This does not look like an email address.'}
+                hint={email.trim() ? 'Confirmations and changes are emailed here.' : 'Without an email the patient gets no messages — tell them the time yourself.'}>
+                <input className={inputCls} type="email" inputMode="email" autoComplete="off" maxLength={254} value={email}
+                  onChange={(e) => setEmail(e.target.value)} aria-invalid={!emailOk} placeholder="name@example.com" />
               </Field>
             </div>
             <div className="mt-4">
@@ -212,7 +224,7 @@ export default function NewAppointmentPage() {
             <div className="mt-5">
               <Choice label="Booking status" value={status} onChange={setStatus} options={[
                 { value: 'confirmed', title: 'Confirmed', text: 'The time is agreed.' },
-                { value: 'pending', title: 'Confirm later', text: 'Still needs a call-back. No text is sent until you confirm.' },
+                { value: 'pending', title: 'Confirm later', text: 'Still needs a call-back. No email is sent until you confirm.' },
               ]} />
             </div>
 
@@ -222,11 +234,10 @@ export default function NewAppointmentPage() {
               </Field>
             </div>
 
-            {smsText && (
-              <div className="mt-4 rounded-lg bg-enamel p-3 text-sm">
-                <p className="mb-1 font-semibold">The patient will get this SMS:</p>
-                <p className="whitespace-pre-wrap text-ink-soft">{smsText}</p>
-                {smsInfo(smsText).segments > 1 && <p className="mt-1 text-xs text-ink-soft">(long message — counts as {smsInfo(smsText).segments} SMS)</p>}
+            {emailText && (
+              <div className="mt-4 text-sm">
+                <p className="mb-1 font-semibold">The patient will get this email:</p>
+                <EmailPreview subject={emailText.subject} body={emailText.body} />
               </div>
             )}
 
@@ -242,8 +253,8 @@ export default function NewAppointmentPage() {
   );
 }
 
-/** Same format the server uses in SMS ('Dy FMDD Mon'), e.g. 'Sat 7 Nov'. */
-function smsDate(key: string) {
+/** Same format the server uses in emails ('Dy FMDD Mon'), e.g. 'Sat 7 Nov'. */
+function serverDate(key: string) {
   return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Addis_Ababa', weekday: 'short', day: 'numeric', month: 'short' })
     .format(new Date(`${key}T12:00:00+03:00`)).replace(',', '');
 }

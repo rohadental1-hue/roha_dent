@@ -41,11 +41,8 @@ verify_jwt = false
 [functions.manage-booking]
 verify_jwt = false
 
-# Internal worker (called by pg_net/pg_cron with x-worker-secret) and provider webhook (?secret=…)
-[functions.send-sms]
-verify_jwt = false
-
-[functions.sms-delivery-webhook]
+# Internal e-mail worker (called by pg_net/pg_cron with x-worker-secret)
+[functions.send-email]
 verify_jwt = false
 
 # Owner-only staff management. The function verifies the caller's access token itself

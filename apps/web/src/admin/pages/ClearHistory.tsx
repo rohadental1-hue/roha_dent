@@ -5,14 +5,14 @@ import { useAuth } from '../auth';
 import { errorMessage } from '../data';
 import { Modal, Tip, btn, inputCls, useConfirm, useToast } from '../ui';
 
-export type HistoryKind = 'sms' | 'patients' | 'activity';
+export type HistoryKind = 'emails' | 'patients' | 'activity';
 
 const COPY: Record<HistoryKind, { button: string; title: string; what: string; done: (n: number, a: number) => string }> = {
-  sms: {
-    button: 'Clear text history',
-    title: 'Clear all text messages?',
-    what: 'Every text message in this list is deleted. Messages still waiting to be sent are kept so they still go out.',
-    done: (n) => `${n} text message${n === 1 ? '' : 's'} deleted`,
+  emails: {
+    button: 'Clear email history',
+    title: 'Clear all emails?',
+    what: 'Every email in this list is deleted. Emails still waiting to be sent are kept so they still go out.',
+    done: (n) => `${n} email${n === 1 ? '' : 's'} deleted`,
   },
   patients: {
     button: 'Clear all patients',
@@ -74,7 +74,7 @@ export function ClearHistoryButton({ kind }: { kind: HistoryKind }) {
   );
 }
 
-export const CLEARED_LABEL: Record<string, string> = { sms: 'text messages', patients: 'patients and appointments', activity: 'change history' };
+export const CLEARED_LABEL: Record<string, string> = { emails: 'emails', sms: 'text messages', patients: 'patients and appointments', activity: 'change history' };
 
 // ---- select rows → "Delete selected" (admin_delete_history, migration 0015) ------------------
 
@@ -100,7 +100,7 @@ export function RowCheck({ sel, id, label }: { sel: Selection; id: string; label
   );
 }
 
-const NOUN: Record<HistoryKind, [string, string]> = { sms: ['text message', 'text messages'], patients: ['patient', 'patients'], activity: ['entry', 'entries'] };
+const NOUN: Record<HistoryKind, [string, string]> = { emails: ['email', 'emails'], patients: ['patient', 'patients'], activity: ['entry', 'entries'] };
 
 /**
  * Bar above a list (owner only): "Select all shown", and once something is ticked,
@@ -147,8 +147,8 @@ export function SelectionBar({ kind, sel, shownIds }: { kind: HistoryKind; sel: 
                 title: `Delete ${n} ${n === 1 ? one : many}?`,
                 text: kind === 'patients'
                   ? 'Their appointments, past and upcoming, are deleted too. Patients are not told. This cannot be undone.'
-                  : kind === 'sms'
-                    ? 'Messages still waiting to be sent are kept so they still go out. This cannot be undone.'
+                  : kind === 'emails'
+                    ? 'Emails still waiting to be sent are kept so they still go out. This cannot be undone.'
                     : 'This cannot be undone.',
                 yes: 'Delete',
                 danger: true,

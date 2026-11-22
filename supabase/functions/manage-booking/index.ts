@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       p_reason: input.reason ?? null,
     });
     if (error) return dbError(req, error);
-    // "booking cancelled" SMS is queued by the database trigger (migration 0008).
+    // "booking cancelled" e-mail is queued by the database trigger (migration 0019).
     return json(req, 200, { appointment: data });
   }
 
@@ -44,6 +44,6 @@ Deno.serve(async (req) => {
     p_dentist_id: input.dentistId ?? null,
   });
   if (error) return dbError(req, error);
-  // "booking rescheduled" SMS is queued by the database trigger (migration 0008).
+  // "booking rescheduled" e-mail is queued by the database trigger (migration 0019).
   return json(req, 200, { appointment: data });
 });

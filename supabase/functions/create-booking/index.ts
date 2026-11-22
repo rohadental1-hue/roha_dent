@@ -1,5 +1,5 @@
 // POST /functions/v1/create-booking
-// Public endpoint (verify_jwt = false). Gates: Zod → phone → rate limits → Turnstile → book_appointment RPC.
+// Public endpoint (verify_jwt = false). Gates: Zod → phone → rate limits (IP, phone, e-mail) → Turnstile → book_appointment RPC.
 import { bookingRequestSchema } from '../_shared/schemas.ts';
 import { normalizeEthiopianPhone } from '../_shared/phone.ts';
 import { clientIp, dbError, fail, json, preflight, readJson } from '../_shared/http.ts';
@@ -30,14 +30,15 @@ Deno.serve(async (req) => {
   if (input.website) return fail(req, 400, 'VALIDATION'); // honeypot
 
   const phone = normalizeEthiopianPhone(input.phone);
-  if (!phone.ok) return fail(req, 400, phone.error === 'UNSUPPORTED_NETWORK' ? 'UNSUPPORTED_NETWORK' : 'INVALID_PHONE');
+  if (!phone.ok) return fail(req, 400, 'INVALID_PHONE');
 
   const ip = clientIp(req);
-  const [ipOk, phoneOk] = await Promise.all([
+  const [ipOk, phoneOk, emailOk] = await Promise.all([
     allow(`book:ip:${ip}`, 5, 3600), // 5 bookings / hour / IP
     allow(`book:phone:${phone.e164}`, 3, 86400), // 3 bookings / day / phone
+    allow(`book:email:${input.email}`, 3, 86400), // 3 bookings / day / e-mail address
   ]);
-  if (!ipOk || !phoneOk) return fail(req, 429, 'RATE_LIMITED');
+  if (!ipOk || !phoneOk || !emailOk) return fail(req, 429, 'RATE_LIMITED');
 
   if (!(await verifyTurnstile(input.turnstileToken, ip))) return fail(req, 403, 'TURNSTILE_FAILED');
 
@@ -50,11 +51,13 @@ Deno.serve(async (req) => {
       p_full_name: input.fullName,
       p_phone: phone.e164,
       p_patient_notes: input.notes ?? null,
+      p_email: input.email,
     })
     .single<BookedRow>();
   if (error) return dbError(req, error);
 
-  // SMS ("booking received" + clinic alert) is queued by the database trigger at commit (migration 0008).
+  // Nothing is e-mailed yet: the patient gets "confirmed" once staff confirm (trigger from migration 0019),
+  // or right away when the clinic auto-confirms.
 
   return json(req, 201, {
     appointment: {

@@ -36,7 +36,7 @@ export function CtaBand({ title = 'Book your first step', body, bookTo = '/book'
         <span data-reveal className="text-xs font-medium tracking-[0.14em] text-roha-700 uppercase">Book online</span>
         <h2 id="book-h" data-reveal style={stagger(1)} className="mt-3.5 text-h2 max-w-[18ch]">{title}</h2>
         <p data-reveal style={stagger(2)} className="mt-3.5 max-w-[46ch]">
-          {body ?? 'Pick a clinic, a treatment and a time online in about a minute. The clinic confirms your visit by SMS.'}
+          {body ?? 'Pick a clinic, a treatment and a time online in about a minute. The clinic confirms your visit by email.'}
         </p>
         <div data-reveal style={stagger(3)} className="mt-[clamp(1.75rem,4vw,2.75rem)] flex flex-wrap items-center justify-center gap-3">
           <Link to={bookTo} className="btn-primary min-h-11 pl-2 text-[0.9375rem]">

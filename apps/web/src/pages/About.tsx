@@ -9,7 +9,7 @@ const commitments = [
   ['You understand before we treat', 'The dentist explains what they see, your options and the cost. Treatment starts only when you agree.'],
   ['Sterile, single-use where it matters', 'Instruments are sterilised for every patient, and needles, gloves and suction tips are single-use.'],
   ['Specialists under one roof', 'General dentistry, root canal treatment, crowns and orthodontics, so you are not sent elsewhere.'],
-  ['Time you can rely on', 'Booked times are kept free for you, and we confirm your appointment by SMS.'],
+  ['Time you can rely on', 'Booked times are kept free for you, and we confirm your appointment by email.'],
 ] as const;
 
 export default function About() {

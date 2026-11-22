@@ -6,19 +6,19 @@ export const faqGroups: FaqGroup[] = [
     items: [
       {
         q: 'How do I book an appointment?',
-        a: 'Choose a clinic, treatment and time on the booking page, then enter your name and phone number. We send you an SMS once your appointment is confirmed. You can also call either clinic.',
+        a: 'Choose a clinic, treatment and time on the booking page, then enter your name, phone number and email. We email you once your appointment is confirmed. You can also call either clinic.',
       },
       {
         q: 'Can I change or cancel my appointment?',
-        a: 'Yes. Your SMS contains a personal link where you can reschedule or cancel up to 2 hours before your visit. You can also call the clinic.',
+        a: 'Yes. Your confirmation email contains a personal link where you can reschedule or cancel up to 2 hours before your visit. You can also call the clinic.',
       },
       {
         q: 'Do I need to create an account?',
-        a: 'No. You only need a phone number that can receive SMS.',
+        a: 'No. You only need a mobile number and an email address.',
       },
       {
-        q: 'Which phone numbers can receive SMS?',
-        a: 'Online booking currently works with Ethio Telecom mobile numbers starting with 09. If you use another network, please call the clinic to book.',
+        q: 'I did not get the email. What now?',
+        a: 'Check your spam or junk folder first. If it is not there, call the clinic: we can check your email address and send it again. Ethio Telecom (09…) and Safaricom (07…) numbers both work for booking.',
       },
       {
         q: 'What should I bring to my first visit?',

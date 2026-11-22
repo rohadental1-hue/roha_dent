@@ -44,7 +44,7 @@ export default function Home() {
     { value: String(locations.length), label: 'Clinics, in Addis Ababa and Gonder' },
     { value: String(services.length), label: 'Treatments, from cleaning to crowns' },
     { value: 'Mon–Sat', label: 'Open 8:30 – 17:30 at both clinics' },
-    { value: 'SMS', label: 'Your booking is confirmed by text' },
+    { value: 'Email', label: 'Your booking is confirmed by email' },
   ];
 
   return (
@@ -173,7 +173,7 @@ export default function Home() {
         <div data-reveal className="on-blue grid gap-10 rounded-panel bg-panel p-[clamp(1.5rem,4.5vw,3.5rem)] text-white lg:grid-cols-[1fr_2fr] lg:gap-14">
           <div>
             <h2 id="how-h" className="text-h2 text-white">Booking takes about a minute</h2>
-            <p className="mt-5 text-white/90">No account and no payment online. You only need an Ethio Telecom number (09…) for the SMS.</p>
+            <p className="mt-5 text-white/90">No account and no payment online. You only need a mobile number and an email address.</p>
             <Button asChild variant="inverse" className="mt-8">
               <Link to="/book"><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link>
             </Button>
@@ -182,7 +182,7 @@ export default function Home() {
             {[
               ['Choose', 'Pick your clinic, the treatment and a dentist, or let us choose whoever is free.'],
               ['Pick a time', 'See the open times for the day you want and tap one.'],
-              ['Get the SMS', 'We text you once the clinic confirms your time.'],
+              ['Get the email', 'We email you once the clinic confirms your time.'],
             ].map(([title, body], i) => (
               <li key={title} className="border-t border-white/25 py-6 sm:border-t-0 sm:border-l sm:px-6 sm:py-1 sm:first:border-l-0 sm:first:pl-0">
                 <span className="font-display text-[3.5rem] leading-none font-medium tracking-[-0.04em] text-adey tabular-nums">{i + 1}</span>

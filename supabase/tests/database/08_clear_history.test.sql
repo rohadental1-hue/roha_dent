@@ -20,8 +20,8 @@ from public.book_appointment(
                                    (now() at time zone 'Africa/Addis_Ababa')::date + 9, interval '1 day') d
      where extract(dow from d) = 1 limit 1)::date + time '09:00') at time zone 'Africa/Addis_Ababa',
   'Test Patient', '+251911000077') bk;
-delete from public.sms_log;
-insert into public.sms_log (appointment_id, type, to_phone, body, status) values
+delete from public.email_log;
+insert into public.email_log (appointment_id, type, to_email, body, status) values
   ((select appointment_id from b), 'booking_received', '+251911000077', 'old', 'delivered'),
   ((select appointment_id from b), 'booking_confirmed', '+251911000077', 'pending', 'queued');
 grant select on b to authenticated;
@@ -29,16 +29,16 @@ grant select on b to authenticated;
 -- Staff (not owner) is refused
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c2","role":"authenticated"}', true);
-select throws_ok($$select public.admin_clear_history('sms')$$, '42501', null, 'staff cannot clear history');
+select throws_ok($$select public.admin_clear_history('emails')$$, '42501', null, 'staff cannot clear history');
 
 -- Owner
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
 select throws_ok($$select public.admin_clear_history('everything')$$, '22023', null, 'unknown history is rejected');
 
-select is((public.admin_clear_history('sms') ->> 'deleted')::int, 1, 'clearing texts deletes the sent one');
+select is((public.admin_clear_history('emails') ->> 'deleted')::int, 1, 'clearing emails deletes the sent one');
 reset role;
-select is((select count(*)::int from public.sms_log), 1, 'a text still waiting to be sent is kept');
-select is((select status::text from public.sms_log), 'queued', '…and it is the queued one');
+select is((select count(*)::int from public.email_log), 1, 'an email still waiting to be sent is kept');
+select is((select status::text from public.email_log), 'queued', '…and it is the queued one');
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}', true);
@@ -46,7 +46,7 @@ select is(public.admin_clear_history('patients'), '{"deleted": 1, "appointments_
 reset role;
 select is((select count(*)::int from public.patients), 0, 'no patients left');
 select is((select count(*)::int from public.appointments), 0, 'no appointments left');
-select is((select appointment_id from public.sms_log), null, 'kept texts lose the link to the deleted appointment');
+select is((select appointment_id from public.email_log), null, 'kept emails lose the link to the deleted appointment');
 select is((select count(*)::int from public.audit_log where entity = 'appointments' and action = 'delete'), 0,
           'deleted appointments are not copied into the change history');
 select is((select count(*)::int from public.audit_log where action = 'clear_history'), 2, 'each clear is recorded once');

@@ -41,7 +41,7 @@ select 'G1', b.appointment_id, b.manage_token
 from ctx, public.book_appointment(ctx.gonder, ctx.scaling, ctx.meron,
        (ctx.monday + time '09:00') at time zone 'Africa/Addis_Ababa', 'Tigist Haile', '+251911000002') b;
 
-insert into public.sms_log (appointment_id, location_id, type, to_phone, body, status)
+insert into public.email_log (appointment_id, location_id, type, to_email, body, status)
 select a.id, ap.location_id, 'booking_received', '+251911000001', 'test', 'delivered'
 from appt a join public.appointments ap on ap.id = a.id;
 
@@ -62,11 +62,11 @@ select ok((select count(*) from public.dentists) = 4, 'anon sees active dentists
 select ok((select count(*) from public.working_hours) > 0, 'anon sees working hours');
 select throws_ok('select * from public.patients',      '42501', null, 'anon cannot read patients');
 select throws_ok('select * from public.appointments',  '42501', null, 'anon cannot read appointments');
-select throws_ok('select * from public.sms_log',       '42501', null, 'anon cannot read sms_log');
+select throws_ok('select * from public.email_log',       '42501', null, 'anon cannot read email_log');
 select throws_ok('select * from public.profiles',      '42501', null, 'anon cannot read profiles');
 select throws_ok('select * from public.time_off',      '42501', null, 'anon cannot read time_off');
 select throws_ok('select * from public.settings',      '42501', null, 'anon cannot read settings');
-select throws_ok('select * from public.sms_templates', '42501', null, 'anon cannot read sms_templates');
+select throws_ok('select * from public.email_templates', '42501', null, 'anon cannot read email_templates');
 select throws_ok($$select * from public.book_appointment(null, null, null, now(), 'x', '+251911000009')$$,
                  '42501', null, 'anon cannot call book_appointment directly');
 select throws_ok($$select public.get_appointment_by_token('x')$$, '42501', null, 'anon cannot call token RPCs directly');
@@ -86,7 +86,7 @@ select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000
 select is((select count(*)::int from public.appointments), 1, 'Addis staff sees 1 appointment');
 select is((select location_id from public.appointments limit 1), (select addis from ctx), '… and it is an Addis one');
 select is((select count(*)::int from public.patients), 1, 'Addis staff sees only Addis patients');
-select is((select count(*)::int from public.sms_log), 1, 'Addis staff sees only Addis SMS');
+select is((select count(*)::int from public.email_log), 1, 'Addis staff sees only Addis emails');
 select is((select count(*)::int from public.settings), 1, 'staff can read settings');
 select is((select count(*)::int from public.audit_log), 0, 'staff cannot read audit log');
 select throws_ok('select * from public.rate_limits', '42501', null, 'staff cannot read rate_limits');
@@ -137,7 +137,7 @@ select is((select count(*)::int from public.appointments), 0, 'inactive staff se
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
 select is((select count(*)::int from public.appointments), 3, 'owner sees all appointments');
 select is((select count(*)::int from public.patients), 3, 'owner sees all patients');
-select is((select count(*)::int from public.sms_log), 2, 'owner sees all SMS');
+select is((select count(*)::int from public.email_log), 2, 'owner sees all emails');
 select ok((select count(*) from public.audit_log) > 0, 'owner can read audit log');
 select lives_ok($$update public.settings set max_reschedules = 4$$, 'owner can update settings');
 

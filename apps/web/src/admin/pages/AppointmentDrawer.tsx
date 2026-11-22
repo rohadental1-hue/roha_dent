@@ -5,8 +5,8 @@ import { clinicDateKey, clinicIso, ethiopianTime, ethiopianTimeOfDay, formatClin
 import { formatEthiopianPhone } from '@shared/phone.ts';
 import { supabase } from '../supabase';
 import { errorMessage, useLookups } from '../data';
-import { APPOINTMENT_SELECT, SMS_ERROR_HELP, SMS_TYPE_LABEL, SOURCE_LABEL, smsState, type Appointment, type AppointmentStatus, type SmsRow } from '../types';
-import { CallButton, Drawer, ErrorBox, Field, Loading, SmsBadge, StatusBadge, Tip, btn, fmtDateTime, inputCls, useConfirm, useToast } from '../ui';
+import { APPOINTMENT_SELECT, EMAIL_ERROR_HELP, EMAIL_TYPE_LABEL, SOURCE_LABEL, emailState, recipientLabel, type Appointment, type AppointmentStatus, type EmailRow } from '../types';
+import { CallButton, Drawer, EmailBadge, ErrorBox, Field, Loading, StatusBadge, Tip, btn, fmtDateTime, inputCls, useConfirm, useToast } from '../ui';
 import { SlotField } from './SlotField';
 import { Icon } from '../../components/Icon';
 
@@ -48,7 +48,7 @@ function Body({ a }: { a: Appointment }) {
   useEffect(() => setNotes(a.internal_notes ?? ''), [a.internal_notes]);
 
   const refresh = () => {
-    for (const k of ['appointment', 'appointments', 'pending-count', 'patient', 'appointment-sms']) qc.invalidateQueries({ queryKey: [k] });
+    for (const k of ['appointment', 'appointments', 'pending-count', 'patient', 'appointment-emails']) qc.invalidateQueries({ queryKey: [k] });
   };
   const update = useMutation({
     mutationFn: async ({ patch }: { patch: Record<string, unknown>; done: string }) => {
@@ -66,6 +66,10 @@ function Body({ a }: { a: Appointment }) {
     update.mutate({ patch: { status, ...extra }, done });
 
   const first = a.patient.full_name.split(' ')[0];
+  const email = a.email ?? a.patient.email;
+  /** What happens for the patient, e.g. "Abebe gets a confirmation email." */
+  const tell = (what: string) => (email ? `${first} gets ${what}.` : `No email on file — call ${first}.`);
+  const moveNote = a.status === 'confirmed' ? tell('an email with the new time') : 'The new time goes out with the confirmation.';
   const active = a.status === 'pending' || a.status === 'confirmed';
   const started = new Date(a.starts_at).getTime() <= Date.now();
   const service = lk?.service(a.service_id);
@@ -83,6 +87,7 @@ function Body({ a }: { a: Appointment }) {
           <StatusBadge status={a.status} />
         </div>
         <div className="mt-3"><CallButton e164={a.patient.phone} /></div>
+        <EmailLine a={a} email={email} onSaved={refresh} />
 
         <div className="mt-5 rounded-lg bg-enamel p-4">
           <p className="text-lg font-bold text-roha-900">{formatClinicDate(a.starts_at)}</p>
@@ -99,7 +104,7 @@ function Body({ a }: { a: Appointment }) {
         )}
         {a.status === 'cancelled' && (
           <p className="mt-4 text-ink-soft">
-            Cancelled by {a.cancelled_by === 'patient' ? 'the patient (with the SMS link)' : a.cancelled_by === 'staff' ? 'staff' : 'the system'}
+            Cancelled by {a.cancelled_by === 'patient' ? 'the patient (with the email link)' : a.cancelled_by === 'staff' ? 'staff' : 'the system'}
             {a.cancel_reason ? ` — “${a.cancel_reason}”` : ''}.
           </p>
         )}
@@ -114,13 +119,13 @@ function Body({ a }: { a: Appointment }) {
                 <p className="font-semibold">This is a new request. What to do:</p>
                 <ol className="list-decimal space-y-0.5 pl-5">
                   <li>Call {first} and check the day and time are right.</li>
-                  <li>Press <b>Confirm booking</b>. {first} gets a confirmation SMS automatically.</li>
+                  <li>Press <b>Confirm booking</b>. {email ? `${first} gets a confirmation email automatically.` : `${first} has no email, so tell them it is confirmed.`}</li>
                 </ol>
                 <p className="text-sm">If the time does not suit, press <b>Change time</b> instead.</p>
               </Tip>
               <ActionButton primary icon="check" disabled={update.isPending}
-                title="Confirm booking" text={`${first} gets a confirmation SMS.`}
-                onClick={() => setStatus('confirmed', `Confirmed. ${first} gets a confirmation SMS.`)} />
+                title="Confirm booking" text={tell('a confirmation email')}
+                onClick={() => setStatus('confirmed', `Confirmed. ${tell('a confirmation email')}`)} />
             </>
           )}
           {a.status === 'confirmed' && started && (
@@ -133,8 +138,8 @@ function Body({ a }: { a: Appointment }) {
           )}
           {active && (
             <>
-              <ActionButton icon="calendar" title="Change time or dentist" text={`${first} gets an SMS with the new time.`} onClick={() => setMode('reschedule')} />
-              <ActionButton icon="close" danger title="Cancel booking" text={`${first} gets a cancellation SMS.`} onClick={() => setMode('cancel')} />
+              <ActionButton icon="calendar" title="Change time or dentist" text={tell('an email with the new time')} onClick={() => setMode('reschedule')} />
+              <ActionButton icon="close" danger title="Cancel booking" text={tell('a cancellation email')} onClick={() => setMode('cancel')} />
             </>
           )}
           {a.status === 'confirmed' && !started && (
@@ -146,9 +151,9 @@ function Body({ a }: { a: Appointment }) {
           )}
           {a.status === 'cancelled' && (
             <ActionButton icon="refresh" disabled={update.isPending} title="Restore this booking"
-              text="Makes it confirmed again (only if the time is still free). No SMS is sent — call the patient."
+              text="Makes it confirmed again (only if the time is still free). No email is sent — call the patient."
               onClick={async () => {
-                if (await ask({ title: 'Restore this booking?', text: `It will be confirmed again for ${formatClinicDate(a.starts_at)} at ${formatClinicTime(a.starts_at)}. No SMS is sent, so please call ${first}.`, yes: 'Yes, restore' })) {
+                if (await ask({ title: 'Restore this booking?', text: `It will be confirmed again for ${formatClinicDate(a.starts_at)} at ${formatClinicTime(a.starts_at)}. No email is sent, so please call ${first}.`, yes: 'Yes, restore' })) {
                   setStatus('confirmed', 'Booking restored');
                 }
               }} />
@@ -157,12 +162,12 @@ function Body({ a }: { a: Appointment }) {
       )}
 
       {mode === 'cancel' && (
-        <CancelForm first={first} busy={update.isPending} onBack={() => setMode('view')}
-          onCancel={(reason) => setStatus('cancelled', `Cancelled. ${first} gets a cancellation SMS.`, { cancel_reason: reason || null })} />
+        <CancelForm first={first} hasEmail={!!email} busy={update.isPending} onBack={() => setMode('view')}
+          onCancel={(reason) => setStatus('cancelled', `Cancelled. ${tell('a cancellation email')}`, { cancel_reason: reason || null })} />
       )}
       {mode === 'reschedule' && (
-        <RescheduleForm a={a} first={first} busy={update.isPending} onBack={() => setMode('view')}
-          onSave={(patch) => update.mutate({ patch, done: `Time changed. ${first} gets an SMS with the new time.` })} />
+        <RescheduleForm a={a} note={moveNote} busy={update.isPending} onBack={() => setMode('view')}
+          onSave={(patch) => update.mutate({ patch, done: `Time changed. ${moveNote}` })} />
       )}
 
       {/* staff notes */}
@@ -182,7 +187,7 @@ function Body({ a }: { a: Appointment }) {
         )}
       </div>
 
-      <SmsHistory appointmentId={a.id} />
+      <EmailHistory appointmentId={a.id} />
     </div>
   );
 }
@@ -208,12 +213,12 @@ function ActionButton({ title, text, icon, onClick, primary, danger, disabled }:
   );
 }
 
-function CancelForm({ first, busy, onBack, onCancel }: { first: string; busy: boolean; onBack: () => void; onCancel: (reason: string) => void }) {
+function CancelForm({ first, hasEmail, busy, onBack, onCancel }: { first: string; hasEmail: boolean; busy: boolean; onBack: () => void; onCancel: (reason: string) => void }) {
   const [reason, setReason] = useState('');
   return (
     <div className="space-y-4 rounded-xl border-2 border-red-200 bg-white p-5">
       <p className="text-lg font-bold text-red-800">Cancel this booking?</p>
-      <p className="text-ink-soft">{first} will get an SMS saying the appointment is cancelled. The time becomes free for others.</p>
+      <p className="text-ink-soft">{hasEmail ? `${first} will get an email saying the appointment is cancelled.` : `${first} has no email — please call them.`} The time becomes free for others.</p>
       <Field label="Why? (optional — only staff see this)">
         <input className={inputCls} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Patient called — travelling" />
       </Field>
@@ -226,7 +231,7 @@ function CancelForm({ first, busy, onBack, onCancel }: { first: string; busy: bo
   );
 }
 
-function RescheduleForm({ a, first, busy, onBack, onSave }: { a: Appointment; first: string; busy: boolean; onBack: () => void; onSave: (patch: Record<string, unknown>) => void }) {
+function RescheduleForm({ a, note, busy, onBack, onSave }: { a: Appointment; note: string; busy: boolean; onBack: () => void; onSave: (patch: Record<string, unknown>) => void }) {
   const { data: lk } = useLookups();
   const [dentistId, setDentistId] = useState(a.dentist_id);
   const [date, setDate] = useState(clinicDateKey(a.starts_at));
@@ -269,71 +274,114 @@ function RescheduleForm({ a, first, busy, onBack, onSave }: { a: Appointment; fi
         </button>
         <button type="button" className={btn.ghost} onClick={onBack}>Back</button>
       </div>
-      {valid && <p className="text-sm text-ink-soft">{first} gets an SMS with the new time.</p>}
+      {valid && <p className="text-sm text-ink-soft">{note}</p>}
     </div>
   );
 }
 
-export function SmsHistory({ appointmentId }: { appointmentId: string }) {
+function EmailLine({ a, email, onSaved }: { a: Appointment; email: string | null; onSaved: () => void }) {
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(email ?? '');
+  useEffect(() => setValue(email ?? ''), [email]);
+  const ok = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('appointments').update({ email: value.trim().toLowerCase() }).eq('id', a.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast('Email saved. Messages for this booking go there from now on.');
+      setEditing(false);
+      onSaved();
+    },
+    onError: (e) => toast(errorMessage(e), 'error'),
+  });
+
+  if (editing) {
+    return (
+      <form className="mt-3 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (ok) save.mutate(); }}>
+        <Field label="Email" className="min-w-0 flex-1">
+          <input className={inputCls} type="email" inputMode="email" maxLength={254} value={value} autoFocus
+            onChange={(e) => setValue(e.target.value)} placeholder="name@example.com" />
+        </Field>
+        <button type="submit" className={btn.primary} disabled={!ok || save.isPending}>Save</button>
+        <button type="button" className={btn.ghost} onClick={() => { setValue(email ?? ''); setEditing(false); }}>Cancel</button>
+      </form>
+    );
+  }
+  return (
+    <p className="mt-3 flex flex-wrap items-center gap-x-2 text-sm">
+      <span className="text-ink-soft">Email:</span>
+      {email ? <span className="break-all font-semibold">{email}</span> : <span className="font-semibold text-[#7a5300]">none — the patient gets no messages</span>}
+      <button type="button" className="link" onClick={() => setEditing(true)}>{email ? 'Change' : 'Add email'}</button>
+    </p>
+  );
+}
+
+export function EmailHistory({ appointmentId }: { appointmentId: string }) {
   const toast = useToast();
   const ask = useConfirm();
   const qc = useQueryClient();
-  const sms = useQuery({
-    queryKey: ['appointment-sms', appointmentId],
+  const emails = useQuery({
+    queryKey: ['appointment-emails', appointmentId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('sms_log')
-        .select('id, appointment_id, location_id, type, to_phone, body, segments, encoding, status, error_code, error, attempts, resend_of, sent_at, delivered_at, created_at')
+      const { data, error } = await supabase.from('email_log')
+        .select('id, appointment_id, location_id, type, to_email, subject, body, provider, status, error_code, error, attempts, resend_of, sent_at, delivered_at, created_at')
         .eq('appointment_id', appointmentId).order('created_at', { ascending: false });
       if (error) throw error;
-      return data as SmsRow[];
+      return data as EmailRow[];
     },
   });
   const resend = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc('resend_sms', { p_sms_id: id });
+      const { error } = await supabase.rpc('resend_email', { p_email_id: id });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast('The message will be sent again in a moment');
-      qc.invalidateQueries({ queryKey: ['appointment-sms'] });
-      qc.invalidateQueries({ queryKey: ['sms'] });
+      toast('The email will be sent again in a moment');
+      qc.invalidateQueries({ queryKey: ['appointment-emails'] });
+      qc.invalidateQueries({ queryKey: ['emails'] });
     },
     onError: (e) => toast(errorMessage(e), 'error'),
   });
 
   return (
     <div>
-      <h3 className="mb-1 text-lg">Text messages for this booking</h3>
+      <h3 className="mb-1 text-lg">Emails for this booking</h3>
       <p className="mb-3 text-sm text-ink-soft">Sent automatically. You only need to act if one shows a red label.</p>
-      {sms.isError ? (
-        <ErrorBox error={errorMessage(sms.error)} onRetry={() => sms.refetch()} />
-      ) : sms.isPending ? (
+      {emails.isError ? (
+        <ErrorBox error={errorMessage(emails.error)} onRetry={() => emails.refetch()} />
+      ) : emails.isPending ? (
         <Loading />
-      ) : sms.data.length === 0 ? (
-        <p className="text-ink-soft">No messages yet.</p>
+      ) : emails.data.length === 0 ? (
+        <p className="text-ink-soft">No emails yet.</p>
       ) : (
         <ul className="space-y-2">
-          {sms.data.map((m) => {
-            const st = smsState(m.status);
+          {emails.data.map((m) => {
+            const st = emailState(m.status);
             return (
               <li key={m.id} className={`rounded-xl border bg-white p-4 ${st.tone === 'bad' ? 'border-red-200' : 'border-line'}`}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold">{SMS_TYPE_LABEL[m.type]}</span>
-                  <SmsBadge status={m.status} />
-                  <span className="text-sm text-ink-soft">{fmtDateTime(m.created_at)} · to {formatEthiopianPhone(m.to_phone)}</span>
+                  <span className="font-semibold">{EMAIL_TYPE_LABEL[m.type]}</span>
+                  <EmailBadge status={m.status} />
+                  <span className="break-all text-sm text-ink-soft">{fmtDateTime(m.created_at)} · to {recipientLabel(m, formatEthiopianPhone)}</span>
                 </div>
                 {st.tone === 'bad' && (
                   <p className="mt-2 text-sm text-red-800">
-                    {(m.error_code && SMS_ERROR_HELP[m.error_code]) || m.error || st.help}
+                    {(m.error_code && EMAIL_ERROR_HELP[m.error_code]) || m.error || st.help}
                   </p>
                 )}
                 <details className="mt-2 text-sm">
-                  <summary className="cursor-pointer text-roha-700">Show the message</summary>
-                  <p className="mt-1 whitespace-pre-wrap rounded-lg bg-enamel p-3 text-ink-soft">{m.body}</p>
+                  <summary className="cursor-pointer text-roha-700">Show the email</summary>
+                  <div className="mt-1 rounded-lg bg-enamel p-3 text-ink-soft">
+                    {m.subject && <p className="mb-2 font-semibold text-ink">{m.subject}</p>}
+                    <p className="whitespace-pre-wrap">{m.body}</p>
+                  </div>
                 </details>
                 <button type="button" className={`${btn.small} mt-2`} disabled={resend.isPending}
                   onClick={async () => {
-                    if (await ask({ title: 'Send this message again?', text: `The same text goes to ${formatEthiopianPhone(m.to_phone)} again.`, yes: 'Send again' })) resend.mutate(m.id);
+                    if (await ask({ title: 'Send this email again?', text: 'The same email goes to the booking’s current email address again.', yes: 'Send again' })) resend.mutate(m.id);
                   }}>
                   Send again
                 </button>

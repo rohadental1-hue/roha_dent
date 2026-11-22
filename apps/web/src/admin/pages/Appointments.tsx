@@ -172,7 +172,7 @@ export function AppointmentList({ items, showDate, highlightNext, showRequested 
       if (error) throw error;
     },
     onSuccess: () => {
-      toast('Confirmed. The patient gets a confirmation SMS.');
+      toast('Confirmed. The patient gets a confirmation email.');
       for (const k of ['appointments', 'pending-count', 'appointment']) qc.invalidateQueries({ queryKey: [k] });
     },
     onError: (e) => toast(errorMessage(e), 'error'),

@@ -1,8 +1,7 @@
 // Owner: clinics, services, dentists (+ which services each dentist offers).
-// Note: the public marketing pages (src/content/*) are static; these records drive booking & SMS.
+// Note: the public marketing pages (src/content/*) are static; these records drive booking & emails.
 import { useEffect, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { normalizeEthiopianPhone } from '@shared/phone.ts';
 import { supabase } from '../supabase';
 import { errorMessage, useLookups } from '../data';
 import type { Dentist, Location, Service } from '../types';
@@ -32,7 +31,7 @@ export default function ClinicPage() {
   if (!lk) return null;
   return (
     <>
-      <PageHeader title="Clinic setup" subtitle="What patients can book online, and where the new-booking SMS alerts go." />
+      <PageHeader title="Clinic setup" subtitle="What patients can book online." />
       <div className="space-y-6">
         <Card title="Clinics">
           <div className="grid gap-5 xl:grid-cols-2">{lk.locations.map((l) => <LocationForm key={l.id} l={l} />)}</div>
@@ -59,19 +58,16 @@ function LocationForm({ l }: { l: Location }) {
   const save = useSave('locations');
   const [v, setV] = useState(l);
   useEffect(() => setV(l), [l]);
-  const alert = v.alert_phone?.trim() ? normalizeEthiopianPhone(v.alert_phone) : null;
-  const badAlert = alert !== null && !alert.ok;
   const dirty = JSON.stringify(v) !== JSON.stringify(l);
   const set = <K extends keyof Location>(k: K, x: Location[K]) => setV({ ...v, [k]: x });
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (badAlert) return;
     save.mutate({
       id: l.id,
       patch: {
         name: v.name.trim(), city: v.city.trim(), phone: v.phone.trim(), address: v.address?.trim() || null,
-        alert_phone: alert && alert.ok ? alert.e164 : null, opening_hours_note: v.opening_hours_note?.trim() || null, is_active: v.is_active,
+        opening_hours_note: v.opening_hours_note?.trim() || null, is_active: v.is_active,
       },
     });
   }
@@ -85,16 +81,11 @@ function LocationForm({ l }: { l: Location }) {
       <Field label="Name"><input className={inputCls} value={v.name} onChange={(e) => set('name', e.target.value)} required /></Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="City"><input className={inputCls} value={v.city} onChange={(e) => set('city', e.target.value)} required /></Field>
-        <Field label="Public phone" hint="Shown in SMS as {location_phone}."><input className={inputCls} value={v.phone} onChange={(e) => set('phone', e.target.value)} required /></Field>
+        <Field label="Public phone" hint="Shown in emails as {location_phone}."><input className={inputCls} value={v.phone} onChange={(e) => set('phone', e.target.value)} required /></Field>
       </div>
       <Field label="Address"><input className={inputCls} value={v.address ?? ''} onChange={(e) => set('address', e.target.value)} /></Field>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="New-booking alert phone" hint="Receives an SMS for each online booking here." error={badAlert ? 'Must be an Ethio Telecom 09… mobile.' : null}>
-          <input className={inputCls} inputMode="tel" value={v.alert_phone ?? ''} onChange={(e) => set('alert_phone', e.target.value)} />
-        </Field>
-        <Field label="Opening hours note"><input className={inputCls} value={v.opening_hours_note ?? ''} onChange={(e) => set('opening_hours_note', e.target.value)} /></Field>
-      </div>
-      {dirty && <button type="submit" className={btn.primary} disabled={save.isPending || badAlert}>Save {l.city}</button>}
+      <Field label="Opening hours note"><input className={inputCls} value={v.opening_hours_note ?? ''} onChange={(e) => set('opening_hours_note', e.target.value)} /></Field>
+      {dirty && <button type="submit" className={btn.primary} disabled={save.isPending}>Save {l.city}</button>}
     </form>
   );
 }

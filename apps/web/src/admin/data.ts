@@ -30,7 +30,7 @@ export function useLookups() {
     staleTime: 5 * 60_000,
     queryFn: async () => {
       const [locations, services, dentists, dentistServices, workingHours] = await Promise.all([
-        rows<Location>(supabase.from('locations').select('id, slug, name, city, phone, address, alert_phone, opening_hours_note, is_active, sort_order').order('sort_order')),
+        rows<Location>(supabase.from('locations').select('id, slug, name, city, phone, address, opening_hours_note, is_active, sort_order').order('sort_order')),
         rows<Service>(supabase.from('services').select('id, slug, name, summary, duration_minutes, price_from_etb, is_bookable, is_active, sort_order').order('sort_order')),
         rows<Dentist>(supabase.from('dentists').select('id, slug, full_name, title, accepts_online_booking, is_active, sort_order').order('sort_order')),
         rows<DentistService>(supabase.from('dentist_services').select('dentist_id, service_id')),
@@ -68,7 +68,7 @@ export function useLookups() {
 // ---- realtime: refresh queries when rows change ----------------------------------------
 
 /** Invalidate the given query-key prefixes whenever `table` changes (RLS-filtered by Realtime). */
-export function useRealtimeRefresh(table: 'appointments' | 'sms_log', keys: string[][], onInsert?: (row: Record<string, unknown>) => void) {
+export function useRealtimeRefresh(table: 'appointments' | 'email_log', keys: string[][], onInsert?: (row: Record<string, unknown>) => void) {
   const qc = useQueryClient();
   const sig = JSON.stringify(keys);
   useEffect(() => {
@@ -90,7 +90,7 @@ export function useRealtimeRefresh(table: 'appointments' | 'sms_log', keys: stri
 
 const BUSINESS: Record<string, string> = {
   SLOT_UNAVAILABLE: 'That time is no longer free for this dentist.',
-  INVALID_PHONE: 'Enter a valid Ethio Telecom mobile number (09…).',
+  INVALID_PHONE: 'Enter a valid Ethiopian mobile number (09… or 07…).',
   INVALID_NAME: 'Enter the patient’s full name (2–100 characters).',
   INVALID_SERVICE: 'That service is not active.',
   INVALID_DENTIST: 'That dentist is not active.',
