@@ -4,7 +4,7 @@ Stock photos are from Unsplash under the free **Unsplash License** (https://unsp
 Regenerate the resized files with `node apps/web/scripts/optimize-images.mjs <downloads folder>`.
 
 > The dentist photos are **samples** of stock models, not Roha staff. The site tags them "Sample photo". Replace them with real headshots before launch.
-> `before-after/whitening-before.webp` is a **digital simulation** made from the "after" photo, which is a stock photo, not a patient result. The site labels it as illustrative.
+> `results/` holds **real Roha patients** (the clinic has their consent), cropped to the mouth only by `scripts/crop-cases.mjs`. The originals show faces and are kept outside the repo; never commit them.
 
 | File | Unsplash photo | Photographer |
 |---|---|---|
@@ -15,7 +15,7 @@ Regenerate the resized files with `node apps/web/scripts/optimize-images.mjs <do
 | branches/addis-ababa.webp, /og-default.png | https://unsplash.com/photos/Fdku_oMrDvk | Kari Bjorn Photography |
 | branches/gonder.webp | https://unsplash.com/photos/e7MJLM5VGjY | Benyamin Bohlouli |
 | services/scaling.webp | https://unsplash.com/photos/8BkF0sTC6Uo | Caroline LM |
-| services/teeth-whitening.webp, before-after/whitening-*.webp | https://unsplash.com/photos/KzmhiJJ041M | Kamal Hoseinianzade |
+| services/teeth-whitening.webp | https://unsplash.com/photos/KzmhiJJ041M | Kamal Hoseinianzade |
 | services/braces-invisible.webp | https://unsplash.com/photos/uTUsnv_UCSQ | Harold Hisona |
 | services/root-canal.webp | https://unsplash.com/photos/SU6EGDd-ySQ | Harold Hisona |
 | services/emax-crown.webp | https://unsplash.com/photos/FCWGwXH55xo | Kamal Hoseinianzade |

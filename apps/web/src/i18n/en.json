@@ -37,13 +37,13 @@
     "samplePhoto": "Sample photo"
   },
   "beforeAfter": {
-    "heading": "Before and after",
+    "heading": "Real results",
     "before": "Before",
     "after": "After",
-    "slider": "Drag to compare before and after",
     "beforeAlt": "Before: {{caption}}",
     "afterAlt": "After: {{caption}}",
-    "illustrative": "Illustrative example: a stock photo and a digital simulation, not a Roha Dental patient. Results vary from person to person."
+    "consent": "Real Roha patients, shared with their permission. Photos are cropped to protect their privacy.",
+    "seeTreatment": "About this treatment"
   },
   "footer": {
     "toTop": "Back to top",

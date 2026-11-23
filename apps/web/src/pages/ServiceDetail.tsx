@@ -9,7 +9,7 @@ import { getService, isBookable } from '../content/services';
 import { dentists } from '../content/dentists';
 import { locations } from '../content/locations';
 import { IntroPhoto, PageIntro } from '../components/PageIntro';
-import { BeforeAfter } from '../components/BeforeAfter';
+import { ResultsGallery } from '../components/ResultsGallery';
 import { casesFor } from '../content/beforeAfter';
 import { CtaBand } from '../components/CtaBand';
 import { DentistAvatar } from '../components/DentistAvatar';
@@ -69,7 +69,7 @@ export default function ServiceDetail() {
           {cases.length > 0 && (
             <section id="before-and-after" aria-labelledby="ba-h" data-reveal className="flex flex-col gap-6">
               <h2 id="ba-h" className="text-[clamp(1.5rem,2.6vw,2rem)] leading-tight">{t('beforeAfter.heading')}</h2>
-              {cases.map((c) => <BeforeAfter key={c.slug} item={c} />)}
+              <ResultsGallery items={cases} showLinks={false} stacked />
             </section>
           )}
 

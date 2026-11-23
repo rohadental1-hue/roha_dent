@@ -11,3 +11,6 @@ test-results/
 coverage/
 .DS_Store
 .wrangler/
+
+# Original patient photos (faces) must never be committed; only face-cropped copies in apps/web/public/img/results/
+/photo_*.jpg

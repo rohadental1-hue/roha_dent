@@ -9,7 +9,7 @@ import { dentists } from '../content/dentists';
 import { faqGroups } from '../content/faq';
 import { LocationPanel } from '../components/LocationPanel';
 import { TreatmentGrid } from '../components/TreatmentGrid';
-import { BeforeAfter } from '../components/BeforeAfter';
+import { ResultsGallery } from '../components/ResultsGallery';
 import { beforeAfterCases } from '../content/beforeAfter';
 import { CalendarDays, MapPin } from 'lucide-react';
 import { DentistAvatar } from '../components/DentistAvatar';
@@ -183,18 +183,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Before and after (illustrative until real, consented cases replace it) */}
+      {/* Real results: consented patient cases, cropped to the mouth */}
       {beforeAfterCases.length > 0 && (
-        <section id="before-and-after" aria-labelledby="ba-h" className="wrap section-y grid items-center gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
-          <div data-reveal>
-            <h2 id="ba-h" className="text-h2 max-w-[14ch]">{t('beforeAfter.heading')}</h2>
-            <p className="mt-5 max-w-md">
-              <strong className="font-medium text-ink">Drag the handle to compare.</strong> At your visit the dentist records your starting shade, so you can see the change for yourself.
-            </p>
-            <Link to={`/services/${beforeAfterCases[0].service}`} className="link mt-6 inline-block">About tooth whitening</Link>
-          </div>
-          <div data-reveal style={stagger(1)}>
-            <BeforeAfter item={beforeAfterCases[0]} />
+        <section id="before-and-after" aria-labelledby="ba-h" className="wrap section-y">
+          <SectionHead id="ba-h" title={t('beforeAfter.heading')} />
+          <p data-reveal style={stagger(1)} className="mt-4 max-w-2xl">{t('beforeAfter.consent')}</p>
+          <div className="mt-[clamp(1.75rem,4vw,3rem)]">
+            <ResultsGallery items={beforeAfterCases} />
           </div>
         </section>
       )}
