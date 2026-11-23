@@ -15,4 +15,14 @@
 /booking          /book      301
 /appointment      /book      301
 /home             /          301
+
+# Paths from the old rohadent.com site
+# /booking-status was the old "check or cancel a booking" page; old references don't exist in the new system, so send people to Contact (phone numbers).
+/booking-status   /contact   301
+/booking-status/* /contact   301
+# Old staff sign-in and dashboard → the new admin area
+/login            /admin     301
+/login/*          /admin     301
+/dashboard        /admin     301
+/dashboard/*      /admin     301
 /index.html       /          301
