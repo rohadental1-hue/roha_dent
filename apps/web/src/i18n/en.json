@@ -37,12 +37,15 @@
     "samplePhoto": "Sample photo"
   },
   "beforeAfter": {
-    "heading": "Real results",
+    "eyebrow": "Real results",
+    "heading": "Smiles we have restored",
+    "sub": "Natural-looking, long-lasting results, planned and finished at our clinics.",
     "before": "Before",
     "after": "After",
-    "beforeAlt": "Before: {{caption}}",
-    "afterAlt": "After: {{caption}}",
-    "consent": "Real Roha patients, shared with their permission. Photos are cropped to protect their privacy.",
+    "beforeAlt": "Before treatment",
+    "afterAlt": "After treatment: {{title}}",
+    "slider": "Compare before and after",
+    "choose": "Choose a result",
     "seeTreatment": "About this treatment"
   },
   "footer": {

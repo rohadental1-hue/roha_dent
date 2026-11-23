@@ -1,22 +1,52 @@
-// Real Roha Dental patients, shared with their permission (the clinic holds their consent).
-// The photos are cropped to the mouth only by scripts/crop-cases.mjs; the originals stay outside the repo.
-// TODO (confirm with clinic): the captions and treatment links are read from the photos.
+// Patient results shown on the home page (Results section) and on each treatment page.
+//
+// HOW TO ADD A CASE: add an entry below. Put the two photos in apps/web/public/img/results/ as
+//   <name>-before.webp and <name>-after.webp (900×600, 3:2), each with a half-size <name>-before-sm.webp /
+//   <name>-after-sm.webp next to it. For real patients, crop to the mouth only with scripts/crop-cases.mjs
+//   (it also strips GPS/EXIF data) and keep the original photos OUT of the repo.
+// HOW TO REMOVE A CASE: delete its entry (and its image files). The layout works for 3 to 8 cases.
+//
+// These are real Roha Dental patients, shared with their permission.
+// TODO (confirm with clinic): titles and descriptions are read from the photos, not from the patients' records.
 export type BeforeAfterCase = {
-  slug: string;
-  service: string; // treatment page it belongs to
-  before: string;
-  after: string;
-  caption: string;
+  id: string;
+  /** Slug of the treatment page this case belongs to (content/services.ts). */
+  treatment: string;
+  title: string;
+  /** One line. */
+  description: string;
+  beforeImage: string;
+  afterImage: string;
 };
 
-const pair = (id: string) => ({ before: `/img/results/case-${id}-before.webp`, after: `/img/results/case-${id}-after.webp` });
+const img = (name: string, k: 'before' | 'after') => `/img/results/${name}-${k}.webp`;
 
 export const beforeAfterCases: BeforeAfterCase[] = [
-  { slug: 'smile-makeover-crowns', service: 'zirconia-crowns-bridges', ...pair('b'), caption: 'Smile makeover with new crowns on the upper teeth' },
-  { slug: 'smile-makeover', service: 'porcelain-veneers', ...pair('a'), caption: 'Stained, worn teeth to a bright, even smile' },
-  { slug: 'missing-front-teeth', service: 'removable-denture', ...pair('d'), caption: 'Missing and broken front teeth replaced' },
-  { slug: 'stained-front-teeth', service: 'porcelain-veneers', ...pair('c'), caption: 'Heavily stained front teeth restored' },
-  { slug: 'front-teeth', service: 'zirconia-crowns-bridges', ...pair('e'), caption: 'Uneven front teeth rebuilt for a straighter line' },
+  {
+    id: 'upper-smile-rebuilt', treatment: 'zirconia-crowns-bridges',
+    title: 'Upper smile rebuilt', description: 'Broken and decayed upper teeth restored with new crowns.',
+    beforeImage: img('case-b', 'before'), afterImage: img('case-b', 'after'),
+  },
+  {
+    id: 'smile-makeover', treatment: 'porcelain-veneers',
+    title: 'Smile makeover', description: 'Stained, worn teeth turned into a bright, even smile.',
+    beforeImage: img('case-a', 'before'), afterImage: img('case-a', 'after'),
+  },
+  {
+    id: 'missing-teeth-replaced', treatment: 'removable-denture',
+    title: 'Missing teeth replaced', description: 'Missing and broken front teeth replaced with natural-looking teeth.',
+    beforeImage: img('case-d', 'before'), afterImage: img('case-d', 'after'),
+  },
+  {
+    id: 'stained-teeth-restored', treatment: 'porcelain-veneers',
+    title: 'Stained teeth restored', description: 'Heavily stained front teeth brought back to a clean, natural colour.',
+    beforeImage: img('case-c', 'before'), afterImage: img('case-c', 'after'),
+  },
+  {
+    id: 'front-teeth-aligned', treatment: 'zirconia-crowns-bridges',
+    title: 'Front teeth aligned', description: 'Uneven front teeth rebuilt with crowns for a straighter line.',
+    beforeImage: img('case-e', 'before'), afterImage: img('case-e', 'after'),
+  },
 ];
 
-export const casesFor = (service: string) => beforeAfterCases.filter((c) => c.service === service);
+export const casesFor = (treatment: string) => beforeAfterCases.filter((c) => c.treatment === treatment);

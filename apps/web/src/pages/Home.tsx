@@ -9,7 +9,7 @@ import { dentists } from '../content/dentists';
 import { faqGroups } from '../content/faq';
 import { LocationPanel } from '../components/LocationPanel';
 import { TreatmentGrid } from '../components/TreatmentGrid';
-import { ResultsGallery } from '../components/ResultsGallery';
+import { ResultsSection } from '../components/results/ResultsSection';
 import { beforeAfterCases } from '../content/beforeAfter';
 import { CalendarDays, MapPin } from 'lucide-react';
 import { DentistAvatar } from '../components/DentistAvatar';
@@ -185,13 +185,9 @@ export default function Home() {
 
       {/* Real results: consented patient cases, cropped to the mouth */}
       {beforeAfterCases.length > 0 && (
-        <section id="before-and-after" aria-labelledby="ba-h" className="wrap section-y">
-          <SectionHead id="ba-h" title={t('beforeAfter.heading')} />
-          <p data-reveal style={stagger(1)} className="mt-4 max-w-2xl">{t('beforeAfter.consent')}</p>
-          <div className="mt-[clamp(1.75rem,4vw,3rem)]">
-            <ResultsGallery items={beforeAfterCases} />
-          </div>
-        </section>
+        <div className="wrap section-y">
+          <ResultsSection cases={beforeAfterCases} id="before-and-after" />
+        </div>
       )}
 
       {/* How booking works: a true sequence, so it is numbered */}
