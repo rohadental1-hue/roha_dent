@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Seo } from '../lib/seo';
 import { organizationLd, dentistLd, websiteLd } from '../lib/schema';
 import { locations } from '../content/locations';
-import { services } from '../content/services';
+import { featuredServices } from '../content/services';
 import { dentists } from '../content/dentists';
 import { faqGroups } from '../content/faq';
 import { LocationPanel } from '../components/LocationPanel';
@@ -22,7 +22,14 @@ import { CtaBand } from '../components/CtaBand';
 import { CountUp } from '../components/CountUp';
 
 const HERO_TITLE = 'Your smile starts here.';
-const HERO_RIGHT = ['Designed', 'with you', 'in mind'];
+const HERO_RIGHT = ['We make', 'you', 'shine.'];
+/** A short preview of the technology section on the About page. */
+const TECH = [
+  ['3D CBCT scans', 'A 3D image of your jaw and teeth, for safe implant and surgery planning.'],
+  ['Digital X-ray and scanner', 'Panoramic and dental X-rays, an intraoral camera and a 3D scanner instead of messy impressions.'],
+  ['CAD/CAM crowns', 'Crowns and bridges designed on the computer for a precise fit.'],
+  ['Digital smile design', 'See your new smile planned on screen before treatment starts.'],
+] as const;
 const MARQUEE = 'Roha Speciality Dental Center — Addis Ababa · Gonder —';
 
 function SectionHead({ id, title, children }: { id: string; title: string; children?: ReactNode }) {
@@ -42,7 +49,7 @@ export default function Home() {
   useGrowPanel(aboutPanel, aboutBg);
   const facts = [
     { value: String(locations.length), label: 'Clinics, in Addis Ababa and Gonder' },
-    { value: String(services.length), label: 'Treatments, from cleaning to crowns' },
+    { value: '3D', label: 'CBCT scans and digital X-rays for precise planning' },
     { value: 'Mon–Sat', label: 'Open 8:30 – 17:30 at both clinics' },
     { value: 'Email', label: 'Your booking is confirmed by email' },
   ];
@@ -51,7 +58,7 @@ export default function Home() {
     <>
       <Seo
         title="Roha Dental | Dentist in Addis Ababa & Gonder"
-        description="Teeth cleaning, whitening, clear aligners, root canal treatment, crowns and dentures in Addis Ababa and Gonder. Book online in a minute or call the clinic."
+        description="Dental implants, braces and clear aligners, veneers, crowns, root canal treatment and whitening, with 3D CBCT and digital X-ray, in Addis Ababa and Gonder. Book online or call."
         path="/"
         jsonLd={[websiteLd(), organizationLd(), ...locations.map(dentistLd)]}
       />
@@ -66,7 +73,7 @@ export default function Home() {
               ))}
             </h1>
             <p data-intro="fade" style={{ '--i': 0 } as CSSProperties} className="max-w-[34ch] text-[0.9375rem]">
-              Check-ups, cleaning, braces, crowns and root canal treatment at our Addis Ababa and Gonder clinics.
+              Implants, braces and aligners, cosmetic dentistry and everyday care, with 3D scans and digital X-rays, at our Addis Ababa and Gonder clinics.
             </p>
             <ul data-intro="fade" style={{ '--i': 1 } as CSSProperties} className="flex flex-wrap gap-2" aria-label="Clinics">
               {locations.map((l) => (
@@ -74,7 +81,7 @@ export default function Home() {
                   <Link to={`/locations/${l.slug}`} className="chip inline-flex items-center gap-2 text-xs hover:border-sky"><span className="size-1.5 rounded-full bg-adey" aria-hidden="true" />{l.city}</Link>
                 </li>
               ))}
-              <li><Link to="/services" className="chip inline-flex text-xs hover:border-sky">{services.length} treatments</Link></li>
+              <li><Link to="/services" className="chip inline-flex text-xs hover:border-sky">Our treatments</Link></li>
             </ul>
           </div>
           <div data-intro="tooth" className="-mt-2.5 -mb-5 max-lg:order-first lg:my-0">
@@ -122,6 +129,23 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Technology: a preview of the About page's technology section */}
+      <section id="technology" aria-labelledby="tech-h" className="wrap pt-[clamp(4rem,9vw,7.5rem)]">
+        <SectionHead id="tech-h" title="Advanced digital dentistry">
+          <Link to="/about#technology" className="link">Our technology</Link>
+        </SectionHead>
+        <ul className="mt-[clamp(1.75rem,4vw,3rem)] grid border-t border-line sm:grid-cols-2 lg:grid-cols-4">
+          {TECH.map(([title, body], i) => (
+            <li key={title} data-reveal style={stagger(i + 1)}
+              className="border-b border-line py-6 sm:odd:pr-6 sm:even:border-l sm:even:pl-6 lg:border-b-0 lg:border-l lg:px-6 lg:first:border-l-0 lg:first:pl-0">
+              <span className="block h-0.5 w-7 rounded-full bg-adey" aria-hidden="true" />
+              <h3 className="mt-5 text-h3">{title}</h3>
+              <p className="mt-2 text-[0.9375rem]">{body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {/* Clinics */}
       <section id="clinics" aria-labelledby="clinics-h" className="wrap section-y">
         <SectionHead id="clinics-h" title="Choose your clinic" />
@@ -144,10 +168,10 @@ export default function Home() {
             <Link to="/services" className="link">{t('cta.allServices')}</Link>
           </SectionHead>
           <p data-reveal style={stagger(1)} className="mt-4 max-w-2xl">
-            Every treatment starts with an examination. The dentist explains what your teeth need and the price before anything is done.
+            Our main treatments. Every treatment starts with an examination. The dentist explains what your teeth need and the price before anything is done.
           </p>
           <div className="mt-[clamp(1.75rem,4vw,3rem)]">
-            <TreatmentGrid />
+            <TreatmentGrid items={featuredServices} showAllLink />
           </div>
         </div>
       </section>

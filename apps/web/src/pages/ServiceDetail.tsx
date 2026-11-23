@@ -5,7 +5,7 @@ import { ArrowUpRight, CalendarDays, Check, Clock, Wallet } from 'lucide-react';
 import { Seo } from '../lib/seo';
 import { breadcrumbLd, faqLd, serviceLd } from '../lib/schema';
 import { stagger } from '../lib/useReveal';
-import { getService } from '../content/services';
+import { getService, isBookable } from '../content/services';
 import { dentists } from '../content/dentists';
 import { locations } from '../content/locations';
 import { IntroPhoto, PageIntro } from '../components/PageIntro';
@@ -34,6 +34,9 @@ export default function ServiceDetail() {
   const team = dentists.filter((d) => d.services.includes(s.slug));
   const related = s.related.map(getService).filter((x) => !!x);
   const cases = casesFor(s.slug);
+  // Treatments outside the online booking list book a check-up; the dentist plans the treatment at that visit.
+  const bookable = isBookable(s);
+  const bookTo = `/book?service=${bookable ? s.slug : 'checkup'}`;
   const cityOf = (slugs: string[]) => slugs.map((x) => locations.find((l) => l.slug === x)!.city).join(' and ');
 
   // keyed so the arrival replays when moving from one treatment to another
@@ -43,14 +46,16 @@ export default function ServiceDetail() {
         title={`${s.shortName} in Addis Ababa & Gonder`}
         ogImage={s.image}
         ogImageAlt={s.imageAlt}
-        description={`${s.summary} Book ${s.shortName.toLowerCase()} online at Roha Dental in Addis Ababa or Gonder.`}
+        description={bookable
+          ? `${s.summary} Book ${s.shortName.toLowerCase()} online at Roha Dental in Addis Ababa or Gonder.`
+          : `${s.summary} Book a consultation online at Roha Dental in Addis Ababa or Gonder.`}
         path={`/services/${s.slug}`}
         jsonLd={[serviceLd(s), breadcrumbLd(crumbs), faqLd(s.faq)]}
       />
       <PageIntro crumbs={crumbs} title={s.name} lede={s.summary} arrive
         media={<IntroPhoto src={s.image} alt={s.imageAlt} width={1200} height={800} flight={s.slug} />}>
         <div className="mt-6 flex flex-wrap gap-2">
-          <Badge variant="secondary"><Clock data-icon="inline-start" />{t('common.visitLength', { count: s.durationMinutes })}</Badge>
+          {bookable && <Badge variant="secondary"><Clock data-icon="inline-start" />{t('common.visitLength', { count: s.durationMinutes })}</Badge>}
           <Badge variant="secondary"><Wallet data-icon="inline-start" />Price confirmed at your exam</Badge>
         </div>
       </PageIntro>
@@ -127,12 +132,16 @@ export default function ServiceDetail() {
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Card data-reveal style={stagger(1)}>
             <CardHeader>
-              <CardTitle>Book {s.shortName.toLowerCase()}</CardTitle>
-              <CardDescription>Pick a clinic and a time online. We confirm by email, and you pay at the clinic.</CardDescription>
+              <CardTitle>{bookable ? `Book ${s.shortName.toLowerCase()}` : 'Book a consultation'}</CardTitle>
+              <CardDescription>
+                {bookable
+                  ? 'Pick a clinic and a time online. We confirm by email, and you pay at the clinic.'
+                  : 'Book a check-up online. The dentist examines you, explains the treatment and its cost, and plans the next visits.'}
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-5">
               <Button asChild className="w-full">
-                <Link to={`/book?service=${s.slug}`}><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link>
+                <Link to={bookTo}><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link>
               </Button>
               {team.length > 0 && (
                 <>
@@ -181,7 +190,7 @@ export default function ServiceDetail() {
         </section>
       )}
 
-      <CtaBand bookTo={`/book?service=${s.slug}`} />
+      <CtaBand bookTo={bookTo} />
     </Fragment>
   );
 }

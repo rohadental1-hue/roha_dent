@@ -23,3 +23,7 @@ Regenerate the resized files with `node apps/web/scripts/optimize-images.mjs <do
 | services/removable-denture.webp | https://unsplash.com/photos/4nUZl0FZM3U | Diana Polekhina |
 
 `deco-aligner.webp` and `deco-tooth.webp` are our own 3D renders (no third-party source). Regenerate them with `node apps/web/scripts/render-deco.mjs`.
+
+> **Placeholder photos (2026-11).** The six newer treatment pages reuse existing photos until their own are added:
+> dental-implants → ceramic-crown, porcelain-veneers → a closer crop of teeth-whitening (porcelain-veneers.webp), zirconia-crowns-bridges → emax-crown,
+> oral-surgery → root-canal, gum-treatment and childrens-dentistry → scaling. Replace them in `src/content/services.ts`.

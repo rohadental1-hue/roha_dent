@@ -1,22 +1,22 @@
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, Clock } from 'lucide-react';
-import { services } from '../content/services';
+import { services, isBookable, type Service } from '../content/services';
 import { stagger } from '../lib/useReveal';
 import { Badge } from '@/components/ui/badge';
 import { srcSet } from '../lib/img';
 import { preloadLarge, startFlight } from '../lib/photoFlight';
 
 /**
- * Every treatment as a plain card that opens its page; the last card is the
- * "not sure" route into a check-up. Used on the home page and /services.
+ * Treatments as plain cards that open their page; the last card is the "not sure"
+ * route into a check-up. /services shows every treatment, the home page only the main ones.
  */
-export function TreatmentGrid({ headingLevel = 'h3' }: { headingLevel?: 'h2' | 'h3' }) {
+export function TreatmentGrid({ headingLevel = 'h3', items = services, showAllLink = false }: { headingLevel?: 'h2' | 'h3'; items?: Service[]; showAllLink?: boolean }) {
   const { t } = useTranslation();
   const H = headingLevel;
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {services.map((s, i) => (
+      {items.map((s, i) => (
         <li key={s.slug} data-reveal style={stagger(i % 4)} className="grid">
           <Link
             to={`/services/${s.slug}`}
@@ -35,10 +35,13 @@ export function TreatmentGrid({ headingLevel = 'h3' }: { headingLevel?: 'h2' | '
             </span>
             <div className="flex flex-1 flex-col p-6">
             <div className="flex items-start justify-between gap-3">
-              <Badge variant="secondary" className="tabular-nums">
-                <Clock data-icon="inline-start" />
-                {t('common.minutes', { count: s.durationMinutes })}
-              </Badge>
+              {/* the newer treatments take several visits, so no single visit length */}
+              {isBookable(s) ? (
+                <Badge variant="secondary" className="tabular-nums">
+                  <Clock data-icon="inline-start" />
+                  {t('common.minutes', { count: s.durationMinutes })}
+                </Badge>
+              ) : <span />}
               <span className="grid size-9 place-items-center rounded-full border border-line text-roha-700 transition-colors duration-300 group-hover:border-roha-700 group-hover:bg-roha-700 group-hover:text-white" aria-hidden="true">
                 <ArrowUpRight className="size-4" />
               </span>
@@ -49,6 +52,22 @@ export function TreatmentGrid({ headingLevel = 'h3' }: { headingLevel?: 'h2' | '
           </Link>
         </li>
       ))}
+      {showAllLink && (
+        <li data-reveal style={stagger(2)} className="grid">
+          <Link
+            to="/services"
+            className="group flex min-h-60 flex-col rounded-card bg-page p-6 ring-1 ring-line transition-[box-shadow,transform] duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(15_35_80/0.45)] hover:ring-roha-300"
+          >
+            <span className="grid size-9 place-items-center self-end rounded-full border border-line text-roha-700 transition-colors duration-300 group-hover:border-roha-700 group-hover:bg-roha-700 group-hover:text-white" aria-hidden="true">
+              <ArrowUpRight className="size-4" />
+            </span>
+            <H className="mt-auto pt-10 font-display text-[1.375rem] leading-tight text-ink">See all treatments</H>
+            <p className="mt-2 text-[0.9375rem] leading-relaxed">
+              Gum treatment, oral surgery, children's dentistry, crowns, dentures and more.
+            </p>
+          </Link>
+        </li>
+      )}
       <li data-reveal style={stagger(3)} className="grid">
         <Link
           to="/book?service=checkup"

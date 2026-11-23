@@ -3,7 +3,7 @@ export const SITE = {
   shortName: 'Roha Dental',
   url: (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, '') || 'https://rohadent.com',
   defaultDescription:
-    'Specialist dental care in Addis Ababa and Gonder: cleaning, whitening, clear aligners, root canal treatment, crowns and dentures. Book online or call.',
+    'Advanced digital dentistry in Addis Ababa and Gonder: dental implants, braces and clear aligners, veneers, crowns, root canal treatment and more. Book online or call.',
   ogImage: '/og-default.png',
   ogImageAlt: 'A treatment room at Roha Speciality Dental Center',
   /** Raster logo for search engines (Google does not accept SVG logos). */
