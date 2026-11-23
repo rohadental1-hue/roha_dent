@@ -25,8 +25,8 @@ const crops = {
   'case-b-after': ['photo_2026-11-23_15-42-15.jpg', { left: 640, top: 560, width: 360, height: 240 }],
   'case-c-before': ['photo_2026-11-23_15-42-25.jpg', { left: 190, top: 160, width: 900, height: 600 }],
   'case-c-after': ['photo_2026-11-23_15-42-33.jpg', { left: 180, top: 57, width: 900, height: 600 }],
-  'case-d-before': ['photo_2026-11-23_15-42-05.jpg', { left: 275, top: 590, width: 405, height: 270 }],
-  'case-d-after': ['photo_2026-11-23_15-42-08.jpg', { left: 290, top: 360, width: 420, height: 280 }],
+  'case-d2-before': ['photo_2026-11-23_15-42-05.jpg', { left: 275, top: 590, width: 405, height: 270 }],
+  'case-d2-after': ['photo_2026-11-23_15-42-08.jpg', { left: 290, top: 360, width: 420, height: 280 }],
   // one designed image: top half before, bottom half after (cropped clear of the BEFORE/AFTER banners and the nose)
   'case-e-before': ['photo_2026-11-23_15-42-38.jpg', { left: 265, top: 160, width: 495, height: 330 }],
   'case-e-after': ['photo_2026-11-23_15-42-38.jpg', { left: 300, top: 700, width: 435, height: 290 }],
@@ -36,7 +36,7 @@ const crops = {
 // tongue are healed like dust on a photo. The teeth and gums are never touched. Spots are [x, y, radius] in
 // output pixels (900×600); each is filled from a blurred copy of its surroundings with a soft edge.
 const cleanUp = {
-  'case-d-after': [
+  'case-d2-after': [
     [400, 128, 9], [270, 160, 8], [232, 236, 10], [246, 253, 8], [652, 151, 13], [705, 191, 8], // lips
     [634, 154, 8], [668, 162, 8], [722, 202, 8], [742, 218, 7], [300, 455, 7], // lip corners and lower lip
     [162, 382, 8], [330, 575, 11], [855, 281, 6], [93, 10, 7], [832, 535, 14], // skin

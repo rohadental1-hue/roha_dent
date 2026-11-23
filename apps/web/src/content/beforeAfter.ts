@@ -35,7 +35,7 @@ export const beforeAfterCases: BeforeAfterCase[] = [
   {
     id: 'missing-teeth-replaced', treatment: 'removable-denture',
     title: 'Missing teeth replaced', description: 'Missing and broken front teeth replaced with natural-looking teeth.',
-    beforeImage: img('case-d', 'before'), afterImage: img('case-d', 'after'),
+    beforeImage: img('case-d2', 'before'), afterImage: img('case-d2', 'after'),
   },
   {
     id: 'stained-teeth-restored', treatment: 'porcelain-veneers',
