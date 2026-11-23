@@ -32,8 +32,41 @@ const crops = {
   'case-e-after': ['photo_2026-11-23_15-42-38.jpg', { left: 300, top: 700, width: 435, height: 290 }],
 };
 
+// Light clean-up, NOT an edit of the result: small white flecks of dental material on the lips, skin and
+// tongue are healed like dust on a photo. The teeth and gums are never touched. Spots are [x, y, radius] in
+// output pixels (900×600); each is filled from a blurred copy of its surroundings with a soft edge.
+const cleanUp = {
+  'case-d-after': [
+    [400, 128, 9], [270, 160, 8], [232, 236, 10], [246, 253, 8], [652, 151, 13], [705, 191, 8], // lips
+    [634, 154, 8], [668, 162, 8], [722, 202, 8], [742, 218, 7], [300, 455, 7], // lip corners and lower lip
+    [162, 382, 8], [330, 575, 11], [855, 281, 6], [93, 10, 7], [832, 535, 14], // skin
+    [345, 405, 8], // tongue
+  ],
+};
+
+/** Heals each spot with the median colour around it, feathered over 3px so no edge shows. */
+async function healSpots(input, spots) {
+  const { data, info } = await sharp(input).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const med = await sharp(input).removeAlpha().median(25).raw().toBuffer();
+  const { width: w, height: h, channels: ch } = info;
+  for (const [cx, cy, r] of spots) {
+    const R = r + 3;
+    for (let y = Math.max(0, cy - R); y <= Math.min(h - 1, cy + R); y++)
+      for (let x = Math.max(0, cx - R); x <= Math.min(w - 1, cx + R); x++) {
+        const d = Math.hypot(x - cx, y - cy);
+        if (d > R) continue;
+        const a = d <= r ? 1 : 1 - (d - r) / 3;
+        const i = (y * w + x) * ch;
+        for (let k = 0; k < 3; k++) data[i + k] = Math.round(data[i + k] * (1 - a) + med[i + k] * a);
+      }
+  }
+  return sharp(data, { raw: { width: w, height: h, channels: ch } }).png().toBuffer();
+}
+
 for (const [name, [file, box]] of Object.entries(crops)) {
-  const full = await sharp(join(src, file)).rotate().extract(box).resize(W, H, { fit: 'cover' }).webp({ quality: 82 }).toBuffer();
+  let img = await sharp(join(src, file)).rotate().extract(box).resize(W, H, { fit: 'cover' }).png().toBuffer();
+  if (cleanUp[name]) img = await healSpots(img, cleanUp[name]);
+  const full = await sharp(img).webp({ quality: 82 }).toBuffer();
   await sharp(full).toFile(join(out, `${name}.webp`));
   await sharp(full).resize(W / 2).webp({ quality: 78 }).toFile(join(out, `${name}-sm.webp`));
   console.log('wrote', name);
