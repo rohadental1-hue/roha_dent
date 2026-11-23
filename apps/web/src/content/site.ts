@@ -11,4 +11,12 @@ export const SITE = {
   locale: 'en_ET',
 } as const;
 
+/** Social accounts, as linked from the previous rohadent.com site. Shown in the footer. */
+export const SOCIAL = [
+  { name: 'Facebook', url: 'https://facebook.com/ermias3266' },
+  { name: 'Instagram', url: 'https://instagram.com/rohadent' },
+  { name: 'TikTok', url: 'https://tiktok.com/@rohadent' },
+  { name: 'Telegram', url: 'https://t.me/Ermiasdereje' },
+] as const;
+
 export const absoluteUrl = (path: string) => `${SITE.url}${path === '/' ? '' : path}`;

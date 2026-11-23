@@ -20,15 +20,16 @@ import { stagger } from '../lib/useReveal';
 import { useGrowPanel } from '../lib/scrollFx';
 import { CtaBand } from '../components/CtaBand';
 import { CountUp } from '../components/CountUp';
+import { srcSet } from '../lib/img';
 
 const HERO_TITLE = 'Your smile starts here.';
 const HERO_RIGHT = ['We make', 'you', 'shine.'];
 /** A short preview of the technology section on the About page. */
 const TECH = [
-  ['3D CBCT scans', 'A 3D image of your jaw and teeth, for safe implant and surgery planning.'],
-  ['Digital X-ray and scanner', 'Panoramic and dental X-rays, an intraoral camera and a 3D scanner instead of messy impressions.'],
-  ['CAD/CAM crowns', 'Crowns and bridges designed on the computer for a precise fit.'],
-  ['Digital smile design', 'See your new smile planned on screen before treatment starts.'],
+  { title: '3D CBCT scans', body: 'Safe planning for implants and surgery.', img: '/img/tech/cbct.webp', alt: 'Dentist pointing at a 3D dental scan on a tablet' },
+  { title: 'Digital X-ray', body: 'Panoramic and dental X-rays, low dose.', img: '/img/tech/xray.webp', alt: 'Panoramic X-ray of a full set of teeth' },
+  { title: 'Intraoral scanner', body: 'A 3D scan instead of impression trays.', img: '/img/tech/scanner.webp', alt: 'Intraoral scanner wand on a dental workstation', pos: '35% 15%' },
+  { title: 'CAD/CAM crowns', body: 'Designed on the computer for a precise fit.', img: '/img/tech/cadcam.webp', alt: 'Milling machine shaping a ceramic crown' },
 ] as const;
 const MARQUEE = 'Roha Speciality Dental Center — Addis Ababa · Gonder —';
 
@@ -73,7 +74,7 @@ export default function Home() {
               ))}
             </h1>
             <p data-intro="fade" style={{ '--i': 0 } as CSSProperties} className="max-w-[34ch] text-[0.9375rem]">
-              Implants, braces and aligners, cosmetic dentistry and everyday care, with 3D scans and digital X-rays, at our Addis Ababa and Gonder clinics.
+              Specialist dental care with advanced digital technology, at our clinics in Addis Ababa and Gonder.
             </p>
             <ul data-intro="fade" style={{ '--i': 1 } as CSSProperties} className="flex flex-wrap gap-2" aria-label="Clinics">
               {locations.map((l) => (
@@ -122,7 +123,7 @@ export default function Home() {
               <div key={f.label} data-reveal style={stagger(i + 2)}
                 className="flex flex-col-reverse justify-end border-white/15 px-[clamp(1.25rem,3vw,2.75rem)] py-6 odd:border-r max-lg:nth-[n+3]:border-t lg:border-r lg:last:border-r-0 sm:py-8">
                 <dt className="mt-2 max-w-[22ch] text-sm text-white/80">{f.label}</dt>
-                <dd className="before:mb-5 before:block before:h-0.5 before:w-7 before:rounded-full before:bg-adey before:content-[''] font-display text-[clamp(1.625rem,3.6vw,3rem)] leading-none font-medium tracking-[-0.03em] whitespace-nowrap tabular-nums"><CountUp value={f.value} /></dd>
+                <dd className="font-display text-[clamp(1.625rem,3.6vw,3rem)] leading-none font-medium tracking-[-0.03em] whitespace-nowrap tabular-nums"><CountUp value={f.value} /></dd>
               </div>
             ))}
           </dl>
@@ -130,17 +131,23 @@ export default function Home() {
       </section>
 
       {/* Technology: a preview of the About page's technology section */}
-      <section id="technology" aria-labelledby="tech-h" className="wrap pt-[clamp(4rem,9vw,7.5rem)]">
-        <SectionHead id="tech-h" title="Advanced digital dentistry">
-          <Link to="/about#technology" className="link">Our technology</Link>
-        </SectionHead>
-        <ul className="mt-[clamp(1.75rem,4vw,3rem)] grid border-t border-line sm:grid-cols-2 lg:grid-cols-4">
-          {TECH.map(([title, body], i) => (
-            <li key={title} data-reveal style={stagger(i + 1)}
-              className="border-b border-line py-6 sm:odd:pr-6 sm:even:border-l sm:even:pl-6 lg:border-b-0 lg:border-l lg:px-6 lg:first:border-l-0 lg:first:pl-0">
-              <span className="block h-0.5 w-7 rounded-full bg-adey" aria-hidden="true" />
-              <h3 className="mt-5 text-h3">{title}</h3>
-              <p className="mt-2 text-[0.9375rem]">{body}</p>
+      {/* compact: one row of photo tiles (a swipeable row on phones) */}
+      <section id="technology" aria-labelledby="tech-h" className="wrap pt-[clamp(3.5rem,7vw,6rem)]">
+        <div data-reveal className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <h2 id="tech-h" className="text-[clamp(1.5rem,2.6vw,2rem)] leading-tight">Advanced digital dentistry</h2>
+          <Link to="/about#technology" className="link text-sm">Our technology</Link>
+        </div>
+        <ul className="-mx-4 mt-7 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+          {TECH.map((x, i) => (
+            <li key={x.title} data-reveal style={stagger(i + 1)}
+              className="flex w-[72%] shrink-0 snap-start items-center gap-4 rounded-card bg-white p-3 pr-5 ring-1 ring-line sm:w-auto">
+              <img src={x.img} srcSet={srcSet(x.img, 800)} sizes="6rem" alt={x.alt} width={800} height={600} loading="lazy" decoding="async"
+                style={'pos' in x ? { objectPosition: x.pos } : undefined}
+                className="aspect-square w-20 shrink-0 rounded-[calc(var(--radius-card)-0.5rem)] object-cover" />
+              <div className="min-w-0">
+                <h3 className="font-display text-base leading-tight text-ink">{x.title}</h3>
+                <p className="mt-1.5 text-sm leading-snug">{x.body}</p>
+              </div>
             </li>
           ))}
         </ul>

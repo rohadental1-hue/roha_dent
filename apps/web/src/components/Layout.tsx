@@ -9,6 +9,8 @@ import { services } from '../content/services';
 import { useReveal } from '../lib/useReveal';
 import { initIntro, playIntro } from '../lib/intro';
 import { useFinale, type FinaleRefs } from './Finale';
+import { SocialIcon } from './SocialIcon';
+import { SOCIAL } from '../content/site';
 import { useSmoothScroll } from '../lib/smoothScroll';
 
 const NAV = [
@@ -117,6 +119,16 @@ function Footer() {
             <div>
               <div ref={refs.brand} className="fin-brand flex h-13 w-fit items-center"><Logo tone="white" /></div>
               <p className="mt-5 max-w-xs text-white/80">{t('footer.tagline')}</p>
+              <ul className="mt-6 flex gap-2" aria-label="Roha Dental on social media">
+                {SOCIAL.map((s) => (
+                  <li key={s.name}>
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={s.name}
+                      className="grid size-10 place-items-center rounded-full bg-white/10 text-white transition-[background-color,transform] duration-200 hover:bg-white/20 active:scale-95">
+                      <SocialIcon name={s.name} className="size-[1.125rem]" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
             <div className="grid gap-8 sm:grid-cols-2">
               {locations.map((l) => (

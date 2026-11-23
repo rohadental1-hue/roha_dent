@@ -27,3 +27,12 @@ Regenerate the resized files with `node apps/web/scripts/optimize-images.mjs <do
 > **Placeholder photos (2026-11).** The six newer treatment pages reuse existing photos until their own are added:
 > dental-implants → ceramic-crown, porcelain-veneers → a closer crop of teeth-whitening (porcelain-veneers.webp), zirconia-crowns-bridges → emax-crown,
 > oral-surgery → root-canal, gum-treatment and childrens-dentistry → scaling. Replace them in `src/content/services.ts`.
+
+Technology photos on the home page (Unsplash License), `img/tech/` (+ `-sm`):
+
+| File | Unsplash photo | Photographer |
+|---|---|---|
+| tech/cbct.webp | https://unsplash.com/photos/VckdJzo7ig0 | Quang Tri NGUYEN |
+| tech/xray.webp | https://unsplash.com/photos/KeVKEs1_RDU | Umanoide |
+| tech/scanner.webp | https://unsplash.com/photos/ER1vKAWRqns | Quang Tri NGUYEN |
+| tech/cadcam.webp | https://unsplash.com/photos/WRv6Rl_nUes | Alexander Pütter (beuwy.com) |

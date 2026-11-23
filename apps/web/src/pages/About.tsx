@@ -63,11 +63,6 @@ export default function About() {
             check-up to implants, orthodontics and full-mouth rehabilitation, every treatment starts with a careful diagnosis
             and a plan made for you, so the results are healthy, lasting and natural-looking.
           </p>
-          <p>
-            Roha is the old name of Lalibela, where churches were carved from a single piece of rock. We chose it as a reminder
-            of patient, careful work that lasts. Our clinics in Gonder and Addis Ababa offer the same standard of care, and
-            patients who live further away can start with a digital consultation.
-          </p>
         </div>
       </section>
 
@@ -79,8 +74,7 @@ export default function About() {
         <ul className="mt-[clamp(1.75rem,4vw,3rem)] grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {technology.map(([title, body], i) => (
             <li key={title} data-reveal style={stagger(i % 4)} className="rounded-card bg-white p-6 ring-1 ring-line">
-              <span className="block h-0.5 w-7 rounded-full bg-adey" aria-hidden="true" />
-              <h3 className="mt-5 text-h3">{title}</h3>
+              <h3 className="text-h3">{title}</h3>
               <p className="mt-2 text-[0.9375rem]">{body}</p>
             </li>
           ))}
@@ -94,7 +88,7 @@ export default function About() {
             {excellence.map(([title, body], i) => (
               <div key={title} data-reveal style={stagger(i + 1)}
                 className="border-t border-white/25 py-6 lg:border-t-0 lg:border-l lg:px-6 lg:py-1 lg:first:border-l-0 lg:first:pl-0">
-                <dt className="before:mb-5 before:block before:h-0.5 before:w-7 before:rounded-full before:bg-adey before:content-[''] font-display text-xl leading-tight text-white">{title}</dt>
+                <dt className="font-display text-xl leading-tight text-white">{title}</dt>
                 <dd className="mt-3 text-[0.9375rem] text-white/85">{body}</dd>
               </div>
             ))}

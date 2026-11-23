@@ -1,5 +1,5 @@
 // schema.org JSON-LD builders
-import { SITE, absoluteUrl } from '../content/site';
+import { SITE, SOCIAL, absoluteUrl } from '../content/site';
 import { locations, type Location } from '../content/locations';
 import { services, type Service } from '../content/services';
 
@@ -41,6 +41,7 @@ export function organizationLd() {
     telephone: locations[0].phoneE164,
     areaServed: locations.map((l) => ({ '@type': 'City', name: l.city })),
     subOrganization: locations.map((l) => ({ '@id': locationId(l) })),
+    sameAs: SOCIAL.map((s) => s.url),
   };
 }
 
