@@ -362,17 +362,3 @@ html[data-page='in'] #main { animation: page-in 0.55s var(--ease-out-soft) both;
 .case-progress { transform-origin: left; animation: case-progress var(--case-ms, 7000ms) linear both; }
 @media (prefers-reduced-motion: reduce) { .stage-in { animation: none; } }
 
-/* ---- Results section (components/results) ---- */
-/* switching case: photos fade and settle from 1.02, the details fade and slide 8px */
-@keyframes rs-stage { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: none; } }
-@keyframes rs-text { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.rs-stage { animation: rs-stage 500ms var(--ease-out-soft) both; }
-.rs-text { animation: rs-text 300ms var(--ease-out-soft) both; }
-/* auto-advance: the active case's bar fills; paused while the visitor hovers or focuses the section */
-@keyframes rs-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.rs-progress { transform-origin: left; animation: rs-progress var(--rs-ms, 8000ms) linear both; }
-.rs-paused .rs-progress { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) {
-  @keyframes rs-stage { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes rs-text { from { opacity: 0; } to { opacity: 1; } }
-}

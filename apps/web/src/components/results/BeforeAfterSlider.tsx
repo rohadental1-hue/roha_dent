@@ -13,6 +13,8 @@ type Props = {
   /** Called on the visitor's first drag, tap or key press (stops the hint and auto-advance). */
   onInteract: () => void;
   priority?: boolean;
+  /** Image `sizes` for the slot the slider sits in. */
+  sizes?: string;
 };
 
 const clamp = (n: number) => Math.min(100, Math.max(0, n));
@@ -22,7 +24,7 @@ const clamp = (n: number) => Math.min(100, Math.max(0, n));
  * swipes to the page, so it never traps scrolling on phones. The handle is a role="slider" for
  * keyboard users (arrows, Home/End).
  */
-export function BeforeAfterSlider({ before, after, title, pos, onChange, onInteract, priority }: Props) {
+export function BeforeAfterSlider({ before, after, title, pos, onChange, onInteract, priority, sizes = '(min-width: 1024px) 46rem, 100vw' }: Props) {
   const { t } = useTranslation();
   const box = useRef<HTMLDivElement>(null);
   const drag = useRef<{ id: number; x: number; y: number; on: boolean } | null>(null);
@@ -74,7 +76,7 @@ export function BeforeAfterSlider({ before, after, title, pos, onChange, onInter
     onChange(clamp(next));
   };
 
-  const imgProps = { width: 900, height: 600, decoding: 'async' as const, draggable: false, sizes: '(min-width: 1024px) 46rem, 100vw',
+  const imgProps = { width: 900, height: 600, decoding: 'async' as const, draggable: false, sizes,
     loading: priority ? ('eager' as const) : ('lazy' as const), fetchPriority: priority ? ('high' as const) : undefined };
 
   return (
