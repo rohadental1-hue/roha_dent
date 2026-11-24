@@ -21,6 +21,7 @@ Regenerate the resized files with `node apps/web/scripts/optimize-images.mjs <do
 | services/emax-crown.webp | https://unsplash.com/photos/FCWGwXH55xo | Kamal Hoseinianzade |
 | services/ceramic-crown.webp | https://unsplash.com/photos/q1KLbswF70Y | Bogdan Condr |
 | services/removable-denture.webp | https://unsplash.com/photos/4nUZl0FZM3U | Diana Polekhina |
+| hero/hero-chair.webp (home hero, mirrored) | https://unsplash.com/photos/aFqSRokmw2E | Ozkan Guner |
 
 `deco-aligner.webp` and `deco-tooth.webp` are our own 3D renders (no third-party source). Regenerate them with `node apps/web/scripts/render-deco.mjs`.
 

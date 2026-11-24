@@ -40,9 +40,8 @@ export function ResultsSection({ cases, id = 'results' }: { cases: BeforeAfterCa
   return (
     <section ref={root} id={id} aria-labelledby={headingId}>
       <header className="max-w-2xl">
-        <p data-reveal className="text-sm font-medium text-roha-700">{t('beforeAfter.eyebrow')}</p>
-        <h2 data-reveal style={stagger(1)} id={headingId} className="mt-3 text-h2">{t('beforeAfter.heading')}</h2>
-        <p data-reveal style={stagger(2)} className="mt-4 text-lg">{t('beforeAfter.sub')}</p>
+        <h2 data-reveal id={headingId} className="text-h2">{t('beforeAfter.heading')}</h2>
+        <p data-reveal style={stagger(1)} className="mt-4 text-lg">{t('beforeAfter.sub')}</p>
       </header>
 
       <ul className="mt-[clamp(2rem,4vw,3rem)] grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2 lg:grid-cols-3 lg:gap-x-8">

@@ -1,9 +1,7 @@
 import { Link } from 'react-router';
-import { useTranslation } from 'react-i18next';
-import { ArrowUpRight, Clock } from 'lucide-react';
-import { services, isBookable, type Service } from '../content/services';
+import { ArrowUpRight } from 'lucide-react';
+import { services, type Service } from '../content/services';
 import { stagger } from '../lib/useReveal';
-import { Badge } from '@/components/ui/badge';
 import { srcSet } from '../lib/img';
 import { preloadLarge, startFlight } from '../lib/photoFlight';
 
@@ -12,7 +10,6 @@ import { preloadLarge, startFlight } from '../lib/photoFlight';
  * route into a check-up. /services shows every treatment, the home page only the main ones.
  */
 export function TreatmentGrid({ headingLevel = 'h3', items = services, showAllLink = false }: { headingLevel?: 'h2' | 'h3'; items?: Service[]; showAllLink?: boolean }) {
-  const { t } = useTranslation();
   const H = headingLevel;
   return (
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -34,13 +31,6 @@ export function TreatmentGrid({ headingLevel = 'h3', items = services, showAllLi
                   alt="" width={1200} height={800} loading="lazy" decoding="async"
                   className="aspect-[16/10] w-full object-cover max-sm:aspect-auto max-sm:h-full transition-transform duration-700 ease-out-soft group-hover:scale-[1.04]" />
               </span>
-              {/* visit length as a frosted label on the photo; the newer treatments take several visits, so none */}
-              {isBookable(s) && (
-                <Badge variant="secondary" className="absolute top-3 left-3 bg-white/85 max-sm:hidden tabular-nums backdrop-blur-md">
-                  <Clock data-icon="inline-start" />
-                  {t('common.minutes', { count: s.durationMinutes })}
-                </Badge>
-              )}
             </span>
             <div className="flex flex-1 flex-col p-5 max-sm:p-4">
               <div className="flex items-start justify-between gap-3">

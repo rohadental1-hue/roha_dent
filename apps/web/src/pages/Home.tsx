@@ -1,4 +1,4 @@
-import { Fragment, useRef, type CSSProperties, type ReactNode } from 'react';
+import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Seo } from '../lib/seo';
@@ -11,19 +11,17 @@ import { LocationPanel } from '../components/LocationPanel';
 import { TreatmentGrid } from '../components/TreatmentGrid';
 import { ResultsSection } from '../components/results/ResultsSection';
 import { beforeAfterCases } from '../content/beforeAfter';
-import { CalendarDays, MapPin } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, MapPin } from 'lucide-react';
 import { DentistAvatar } from '../components/DentistAvatar';
-import { HeroTooth } from '../components/hero/HeroTooth';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { stagger } from '../lib/useReveal';
-import { useGrowPanel } from '../lib/scrollFx';
 import { CtaBand } from '../components/CtaBand';
-import { CountUp } from '../components/CountUp';
 import { srcSet } from '../lib/img';
 
 const HERO_TITLE = 'Your smile starts here.';
-const HERO_RIGHT = ['We make', 'you', 'shine.'];
+/** Unsplash photo (see public/img/CREDITS.md). */
+const HERO_IMG = '/img/hero/hero-chair.webp';
 /** A short preview of the technology section on the About page. */
 const TECH = [
   { title: '3D CBCT scans', body: 'Safe planning for implants and surgery.', img: '/img/tech/cbct.webp', alt: 'Dentist pointing at a 3D dental scan on a tablet' },
@@ -31,7 +29,6 @@ const TECH = [
   { title: 'Intraoral scanner', body: 'A 3D scan instead of impression trays.', img: '/img/tech/scanner.webp', alt: 'Intraoral scanner wand on a dental workstation', pos: '35% 15%' },
   { title: 'CAD/CAM crowns', body: 'Designed on the computer for a precise fit.', img: '/img/tech/cadcam.webp', alt: 'Milling machine shaping a ceramic crown' },
 ] as const;
-const MARQUEE = 'Roha Speciality Dental Center — Addis Ababa · Gonder —';
 
 function SectionHead({ id, title, children }: { id: string; title: string; children?: ReactNode }) {
   return (
@@ -45,15 +42,6 @@ function SectionHead({ id, title, children }: { id: string; title: string; child
 export default function Home() {
   const { t } = useTranslation();
   const faqPreview = faqGroups[0].items.slice(0, 3);
-  const aboutPanel = useRef<HTMLDivElement>(null);
-  const aboutBg = useRef<HTMLImageElement>(null);
-  useGrowPanel(aboutPanel, aboutBg);
-  const facts = [
-    { value: String(locations.length), label: 'Clinics, in Addis Ababa and Gonder' },
-    { value: '3D', label: 'CBCT scans and digital X-rays for precise planning' },
-    { value: 'Mon–Sat', label: 'Open 8:30 – 17:30 at both clinics' },
-    { value: 'Email', label: 'Your booking is confirmed by email' },
-  ];
 
   return (
     <>
@@ -64,69 +52,66 @@ export default function Home() {
         jsonLd={[websiteLd(), organizationLd(), ...locations.map(dentistLd)]}
       />
 
-      {/* Hero: headline | glass tooth | "Designed with you in mind", then the name marquee (as in the reference) */}
-      <section id="top" className="hero overflow-hidden pt-[clamp(0.5rem,2vw,1.5rem)]">
-        <div className="wrap grid items-center lg:min-h-[min(36rem,70vh)] lg:grid-cols-[1fr_minmax(16rem,1.05fr)_1fr] lg:gap-2">
-          <div className="relative z-10 grid gap-[1.625rem]">
-            <h1 className="text-[clamp(2.5rem,5.4vw,4.75rem)] leading-[0.98]">
+      {/* Hero: a rounded photo panel. Headline and booking pill top-left, clinics card bottom-left,
+          treatment chips bottom-right, and a thin footer row. On phones the photo sits on top and fades into the panel. */}
+      <section id="top" className="hero wrap pt-[clamp(0.25rem,1.5vw,1rem)]">
+        <div className="on-blue relative isolate flex flex-col overflow-hidden rounded-panel bg-roha-900 text-white lg:min-h-[min(44rem,calc(100svh-6.5rem))]">
+          <div data-intro="photo" className="relative -z-10 aspect-[4/3] max-lg:-mb-24 sm:aspect-[16/9] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[78%]">
+            <img src={HERO_IMG} srcSet={srcSet(HERO_IMG, 1920)} sizes="(min-width: 1024px) 56rem, 100vw"
+              alt="Modern dental treatment chair and unit in a bright clinic room" width={1920} height={1280}
+              fetchPriority="high" decoding="async"
+              className="hero-photo size-full object-cover object-[70%_55%]" />
+            <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-roha-900/90 to-transparent max-lg:hidden" aria-hidden="true" />
+          </div>
+
+          <div className="relative grid gap-6 p-[clamp(1.25rem,4vw,3rem)] max-lg:pt-0 lg:max-w-[38rem]">
+            <h1 className="text-[clamp(2.5rem,5.6vw,4.75rem)] leading-[0.98] text-white">
               {HERO_TITLE.split(' ').map((w, i) => (
                 <Fragment key={i}>{i > 0 && ' '}<span data-intro style={{ '--i': i } as CSSProperties}>{w}</span></Fragment>
               ))}
             </h1>
-            <p data-intro="fade" style={{ '--i': 0 } as CSSProperties} className="max-w-[34ch] text-[0.9375rem]">
+            <p data-intro="fade" style={{ '--i': 0 } as CSSProperties} className="max-w-[36ch] text-[0.9375rem] text-white/85">
               Specialist dental care with advanced digital technology, at our clinics in Addis Ababa and Gonder.
             </p>
-            <ul data-intro="fade" style={{ '--i': 1 } as CSSProperties} className="flex flex-wrap gap-2" aria-label="Clinics">
-              {locations.map((l) => (
-                <li key={l.slug}>
-                  <Link to={`/locations/${l.slug}`} className="chip inline-flex items-center gap-2 text-xs hover:border-sky"><span className="size-1.5 rounded-full bg-adey" aria-hidden="true" />{l.city}</Link>
-                </li>
-              ))}
-              <li><Link to="/services" className="chip inline-flex text-xs hover:border-sky">Our treatments</Link></li>
-            </ul>
+            <div data-intro="fade" style={{ '--i': 1 } as CSSProperties}>
+              <Link to="/book" className="btn group min-h-12 bg-white pr-1.5 pl-6 text-[0.9375rem] text-roha-900 hover:bg-roha-50">
+                {t('cta.book')}
+                <span className="grid size-9 place-items-center rounded-full bg-sky text-white transition-transform duration-300 group-hover:translate-x-0.5">
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </span>
+              </Link>
+            </div>
           </div>
-          <div data-intro="tooth" className="-mt-2.5 -mb-5 max-lg:order-first lg:my-0">
-            <HeroTooth />
+
+          {/* clinics card (hidden on small phones, where the panel is already tall) */}
+          <div className="relative mt-auto px-[clamp(1.25rem,4vw,3rem)] pt-8 pb-[clamp(1.25rem,4vw,3rem)] max-sm:hidden">
+            <a href="#clinics" data-intro="fade" style={{ '--i': 2 } as CSSProperties}
+              className="glass group flex w-fit items-center gap-3 rounded-card p-2 pr-4">
+              <img src="/img/branches/addis-ababa-sm.webp" alt="" width={800} height={500} loading="lazy"
+                className="h-16 w-20 shrink-0 rounded-[10px] object-cover" />
+              <span className="min-w-0 text-sm leading-snug">
+                <span className="block font-medium">Find your clinic</span>
+                <span className="block text-white/75">Addis Ababa and Gonder</span>
+              </span>
+              <ArrowUpRight className="size-4 shrink-0 text-white/80 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+            </a>
           </div>
-          <div className="relative z-10 mt-7 grid justify-items-start gap-[1.375rem] lg:mt-0">
-            <h2 className="text-[clamp(2rem,3.6vw,3.25rem)] leading-none">
-              {HERO_RIGHT.map((w, i) => (
-                <Fragment key={i}>{i > 0 && ' '}<span data-intro="dim" style={{ '--i': i } as CSSProperties}>{w}</span></Fragment>
-              ))}
-            </h2>
-            <Link to="/book" data-intro="fade" style={{ '--i': 2 } as CSSProperties} className="btn-primary min-h-11 pl-2 text-[0.9375rem]">
-              <span className="btn-ic"><CalendarDays className="size-4" aria-hidden="true" /></span>
-              {t('cta.book')}
-            </Link>
-          </div>
-        </div>
-        <div className="marquee" aria-hidden="true">
-          <div>{MARQUEE}&nbsp;</div><div>{MARQUEE}&nbsp;</div>
+
         </div>
       </section>
 
-      {/* About: the clinic itself */}
-      <section id="about" aria-labelledby="about-h" className="wrap">
-        <div ref={aboutPanel} className="on-blue relative isolate flex min-h-[36rem] origin-center flex-col justify-between overflow-hidden rounded-panel text-white will-change-transform">
-          <img ref={aboutBg} src="/img/clinic-hallway.webp" alt="" width={1284} height={856} loading="lazy"
-            className="absolute inset-0 -z-20 h-full w-full object-cover" />
-          <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(29_62_130/0.9)_0%,rgb(42_82_158/0.66)_50%,rgb(25_55_120/0.9)_100%)]" aria-hidden="true" />
-          <div className="max-w-2xl p-[clamp(1.5rem,4vw,2.75rem)]">
-            <h2 id="about-h" data-reveal className="text-h2 max-w-[15ch] text-white">Two clinics, one way of caring for you</h2>
-            <p data-reveal style={stagger(1)} className="mt-5 max-w-[46ch] text-white/90">
+      {/* About: an open, light section (not a second panel), so the hero stays the only dark box */}
+      <section id="about" aria-labelledby="about-h" className="wrap pt-[clamp(3.5rem,7vw,6rem)]">
+        <div className="grid items-center gap-[clamp(2rem,5vw,4.5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+          <div>
+            <h2 id="about-h" data-reveal className="text-h2 max-w-[15ch]">Two clinics, one way of caring for you</h2>
+            <p data-reveal style={stagger(2)} className="mt-5 max-w-[46ch]">
               Roha Speciality Dental Center cares for families in Addis Ababa and Gonder. Every visit starts with an examination, so your dentist can explain what is needed, your options and what to expect before treatment begins.
             </p>
-            <div data-reveal style={stagger(2)}><Button asChild variant="inverse-outline" className="mt-7"><Link to="/about">About Roha</Link></Button></div>
+            <div data-reveal style={stagger(3)}><Button asChild variant="outline" className="mt-7"><Link to="/about">About Roha</Link></Button></div>
           </div>
-          <dl className="grid grid-cols-2 bg-roha-900 lg:grid-cols-4">
-            {facts.map((f, i) => (
-              <div key={f.label} data-reveal style={stagger(i + 2)}
-                className="flex flex-col-reverse justify-end border-white/15 px-[clamp(1.25rem,3vw,2.75rem)] py-6 odd:border-r max-lg:nth-[n+3]:border-t lg:border-r lg:last:border-r-0 sm:py-8">
-                <dt className="mt-2 max-w-[22ch] text-sm text-white/80">{f.label}</dt>
-                <dd className="font-display text-[clamp(1.625rem,3.6vw,3rem)] leading-none font-medium tracking-[-0.03em] whitespace-nowrap tabular-nums"><CountUp value={f.value} /></dd>
-              </div>
-            ))}
-          </dl>
+          <img data-reveal style={stagger(2)} src="/img/clinic-hallway.webp" alt="Hallway and treatment rooms at a Roha clinic" width={1284} height={856} loading="lazy" decoding="async"
+            className="aspect-[4/3] w-full rounded-panel object-cover" />
         </div>
       </section>
 
@@ -157,12 +142,12 @@ export default function Home() {
       <section id="clinics" aria-labelledby="clinics-h" className="wrap section-y">
         <SectionHead id="clinics-h" title="Choose your clinic" />
         <p data-reveal style={stagger(1)} className="mt-4 max-w-2xl">
-          Both clinics are open Monday to Saturday. Call, message us on WhatsApp, or book a time online.
+          Both clinics are open Monday to Saturday, 8:30 – 17:30.
         </p>
         <div className="mt-[clamp(1.75rem,4vw,3rem)] grid gap-4 md:grid-cols-2">
           {locations.map((l, i) => (
             <div key={l.slug} data-reveal style={stagger(i + 2)} className="grid">
-              <LocationPanel location={l} />
+              <LocationPanel location={l} compact />
             </div>
           ))}
         </div>
@@ -171,9 +156,7 @@ export default function Home() {
       {/* Treatments */}
       <section id="treatments" aria-labelledby="services-h" className="section-y bg-page">
         <div className="wrap">
-          <SectionHead id="services-h" title="Treatments">
-            <Link to="/services" className="link">{t('cta.allServices')}</Link>
-          </SectionHead>
+          <SectionHead id="services-h" title="Treatments" />
           <p data-reveal style={stagger(1)} className="mt-4 max-w-2xl">
             Our main treatments. Every treatment starts with an examination. The dentist explains what your teeth need and the price before anything is done.
           </p>
@@ -189,32 +172,6 @@ export default function Home() {
           <ResultsSection cases={beforeAfterCases} id="before-and-after" />
         </div>
       )}
-
-      {/* How booking works: a true sequence, so it is numbered */}
-      <section id="how-booking-works" aria-labelledby="how-h" className="wrap section-y">
-        <div data-reveal className="on-blue grid gap-10 rounded-panel bg-panel p-[clamp(1.5rem,4.5vw,3.5rem)] text-white lg:grid-cols-[1fr_2fr] lg:gap-14">
-          <div>
-            <h2 id="how-h" className="text-h2 text-white">Booking takes about a minute</h2>
-            <p className="mt-5 text-white/90">No account and no payment online. You only need a mobile number and an email address.</p>
-            <Button asChild variant="inverse" className="mt-8">
-              <Link to="/book"><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link>
-            </Button>
-          </div>
-          <ol className="grid sm:grid-cols-3">
-            {[
-              ['Choose', 'Pick your clinic, the treatment and a dentist, or let us choose whoever is free.'],
-              ['Pick a time', 'See the open times for the day you want and tap one.'],
-              ['Get the email', 'We email you once the clinic confirms your time.'],
-            ].map(([title, body], i) => (
-              <li key={title} className="border-t border-white/25 py-6 sm:border-t-0 sm:border-l sm:px-6 sm:py-1 sm:first:border-l-0 sm:first:pl-0">
-                <span className="font-display text-[3.5rem] leading-none font-medium tracking-[-0.04em] text-adey tabular-nums">{i + 1}</span>
-                <h3 className="mt-6 text-h3 text-white">{title}</h3>
-                <p className="mt-2 text-[0.9375rem] text-white/85">{body}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
 
       {/* Dentists */}
       <section id="dentists" aria-labelledby="team-h" className="wrap">

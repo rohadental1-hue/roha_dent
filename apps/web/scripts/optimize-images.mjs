@@ -10,7 +10,7 @@ const src = process.argv[2];
 if (!src) throw new Error('Pass the folder that holds the original downloads.');
 const pub = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
-// key → [output path under public/, width, height, crop position, optional pre-crop in source pixels]
+// key → [output path under public/, width, height, crop position, optional pre-crop in source pixels, optional mirror]
 const jobs = {
   // Full-length seated photo: crop to head and shoulders first (original is 2000×3000).
   f1: ['img/dentists/dr-selam-bekele.webp', 800, 1000, 'north', { left: 220, top: 260, width: 1000, height: 1250 }],
@@ -26,13 +26,16 @@ const jobs = {
   emax: ['img/services/emax-crown.webp', 1200, 800, 'centre'],
   ceramic: ['img/services/ceramic-crown.webp', 1200, 800, 'centre'],
   denture: ['img/services/removable-denture.webp', 1200, 800, 'centre'],
+  // mirrored so the chair sits right of the headline; the pre-crop (of the 2400×1600 download) drops the painting at the edge
+  hero: ['img/hero/hero-chair.webp', 1920, 1280, 'centre', { left: 450, top: 0, width: 1950, height: 1600 }, true],
 };
 
-for (const [key, [out, w, h, position, extract]] of Object.entries(jobs)) {
+for (const [key, [out, w, h, position, extract, mirror]] of Object.entries(jobs)) {
   const file = join(pub, out);
   mkdirSync(dirname(file), { recursive: true });
   let img = sharp(join(src, `${key}.jpg`));
   if (extract) img = img.extract(extract);
+  if (mirror) img = img.flop();
   const full = await img.resize(w, h, { fit: 'cover', position }).webp({ quality: 78 }).toBuffer();
   await sharp(full).toFile(file);
   // Half-width copy for cards and avatars (used via srcset; see src/lib/img.ts).

@@ -7,8 +7,12 @@ import { srcSet } from '../lib/img';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
-/** One clinic, every way to reach it. */
-export function LocationPanel({ location: l, headingLevel = 'h3' }: { location: Location; headingLevel?: 'h2' | 'h3' }) {
+/**
+ * One clinic, every way to reach it.
+ * `compact` (home page): photo, city, address, call and directions only. The city links to the clinic page,
+ * and hours are left to the section text.
+ */
+export function LocationPanel({ location: l, headingLevel = 'h3', compact = false }: { location: Location; headingLevel?: 'h2' | 'h3'; compact?: boolean }) {
   const { t } = useTranslation();
   const H = headingLevel;
   return (
@@ -19,16 +23,18 @@ export function LocationPanel({ location: l, headingLevel = 'h3' }: { location: 
       </Link>
       <CardHeader>
         <CardTitle>
-          <H className="text-[1.625rem] leading-tight">{l.city}</H>
+          <H className="text-[1.625rem] leading-tight">
+            {compact ? <Link to={`/locations/${l.slug}`} className="hover:text-roha-700">{l.city}</Link> : l.city}
+          </H>
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-6">
         <dl className="grid gap-3">
-          <div className="flex gap-3">
+          {!compact && <div className="flex gap-3">
             <dt className="sr-only">{t('common.hours')}</dt>
             <Clock className="mt-0.5 size-5 shrink-0 text-roha-500" aria-hidden="true" />
             <dd>{l.hoursText.map((h) => <span key={h} className="block">{h}</span>)}</dd>
-          </div>
+          </div>}
           <div className="flex gap-3">
             <dt className="sr-only">{t('common.address')}</dt>
             <MapPin className="mt-0.5 size-5 shrink-0 text-roha-500" aria-hidden="true" />
@@ -36,21 +42,25 @@ export function LocationPanel({ location: l, headingLevel = 'h3' }: { location: 
           </div>
         </dl>
         <div className="mt-auto grid grid-cols-2 gap-2">
-          <Button asChild className="col-span-2">
+          <Button asChild className={compact ? undefined : 'col-span-2'}>
             <a href={`tel:${l.phoneE164}`}><Phone data-icon="inline-start" />{l.phoneDisplay}</a>
           </Button>
-          <Button asChild variant="outline">
-            <a href={`https://wa.me/${l.whatsapp}`} rel="noopener" target="_blank"><Icon name="whatsapp" className="size-4" />{t('cta.whatsapp')}</a>
-          </Button>
+          {!compact && (
+            <Button asChild variant="outline">
+              <a href={`https://wa.me/${l.whatsapp}`} rel="noopener" target="_blank"><Icon name="whatsapp" className="size-4" />{t('cta.whatsapp')}</a>
+            </Button>
+          )}
           <Button asChild variant="outline">
             <a href={l.mapUrl} rel="noopener" target="_blank"><MapPin data-icon="inline-start" />{t('cta.directions')}</a>
           </Button>
         </div>
       </CardContent>
-      <CardFooter className="flex-wrap gap-x-6 gap-y-2">
-        <Link to={`/book?location=${l.slug}`} className="link">{t('cta.book')}</Link>
-        <Link to={`/locations/${l.slug}`} className="link">{t('cta.viewClinic')}</Link>
-      </CardFooter>
+      {!compact && (
+        <CardFooter className="flex-wrap gap-x-6 gap-y-2">
+          <Link to={`/book?location=${l.slug}`} className="link">{t('cta.book')}</Link>
+          <Link to={`/locations/${l.slug}`} className="link">{t('cta.viewClinic')}</Link>
+        </CardFooter>
+      )}
     </Card>
   );
 }
